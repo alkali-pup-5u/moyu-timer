@@ -3,769 +3,699 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>摸魚計時器 & 薪水計算器 v2.1</title>
+    <title id="page-title">⚡ 下班倒計時 & 賺錢計數器 - 摸魚神器</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+
     <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-color: #f8fafc;
-            --text-secondary: #94a3b8;
-            --accent-color: #38bdf8;
-            --accent-gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
-            --danger-color: #f43f5e;
-            --success-color: #10b981;
-            --border-color: #334155;
-        }
-
-        [data-theme="light"] {
-            --bg-color: #f1f5f9;
-            --card-bg: #ffffff;
-            --text-color: #1e293b;
-            --text-secondary: #64748b;
-            --accent-color: #0284c7;
-            --accent-gradient: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%);
-            --border-color: #e2e8f0;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #0f172a;
         }
-
-        .container {
-            width: 100%;
-            max-width: 650px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+        .font-mono-num {
+            font-family: 'JetBrains Mono', monospace;
         }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--card-bg);
-            padding: 15px 25px;
-            border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            border: 1px solid var(--border-color);
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-
-        h1 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .glow-orange {
+            box-shadow: 0 0 25px rgba(249, 115, 22, 0.25);
         }
-
-        .btn-group {
-            display: flex;
-            gap: 10px;
-        }
-
-        button {
-            background: var(--card-bg);
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
-            padding: 8px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-
-        button:hover {
-            border-color: var(--accent-color);
-            color: var(--accent-color);
-        }
-
-        .card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            border: 1px solid var(--border-color);
-        }
-
-        .settings-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .input-group label {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-
-        .input-group input, .input-group select {
-            background: var(--bg-color);
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            width: 100%;
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            cursor: pointer;
-            margin-top: 5px;
-        }
-
-        .checkbox-group input {
-            width: 16px;
-            height: 16px;
-            accent-color: var(--accent-color);
-            cursor: pointer;
-        }
-
-        .money-display {
-            text-align: center;
-            padding: 15px 0;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 20px;
-        }
-
-        .money-title {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            margin-bottom: 5px;
-        }
-
-        .money-amount {
-            font-size: 2.8rem;
-            font-weight: 800;
-            background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .progress-section {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .progress-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-
-        .progress-bar-bg {
-            background: var(--bg-color);
-            height: 12px;
-            border-radius: 6px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-        }
-
-        .progress-bar-fill {
-            background: var(--accent-gradient);
-            height: 100%;
-            width: 0%;
-            border-radius: 6px;
-            transition: width 0.5s ease;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .stat-card {
-            background: var(--bg-color);
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            text-align: center;
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            margin-bottom: 4px;
-        }
-
-        .stat-value {
-            font-size: 1.2rem;
-            font-weight: 700;
-        }
-
-        /* 日曆統計模組 */
-        .calendar-card {
-            margin-top: 5px;
-        }
-
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 6px;
-            text-align: center;
-        }
-
-        .calendar-weekday {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            padding-bottom: 5px;
-        }
-
-        .calendar-day {
-            background: var(--bg-color);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 8px 2px;
-            font-size: 0.85rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            min-height: 50px;
-        }
-
-        .calendar-day.active {
-            border-color: var(--accent-color);
-            background: rgba(56, 189, 248, 0.05);
-        }
-
-        .calendar-day.today {
-            border-color: var(--success-color);
-            font-weight: bold;
-        }
-
-        .calendar-day span {
-            font-size: 0.65rem;
-            color: var(--success-color);
-        }
-
-        /* 贊助 Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background: var(--card-bg);
-            padding: 25px;
-            border-radius: 16px;
-            text-align: center;
-            max-width: 320px;
-            width: 90%;
-            border: 1px solid var(--border-color);
-        }
-
-        .qr-images {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin: 15px 0;
-        }
-
-        .qr-item img {
-            width: 110px;
-            height: 110px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-
-        .qr-item p {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            margin-top: 5px;
-        }
-
-        footer {
-            margin-top: 20px;
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            text-align: center;
-        }
-
-        footer a {
-            color: var(--accent-color);
-            text-decoration: none;
+        .glow-green {
+            box-shadow: 0 0 25px rgba(34, 197, 94, 0.25);
         }
     </style>
 </head>
-<body data-theme="dark">
+<body class="min-h-screen text-slate-100 flex flex-col items-center justify-center p-4 relative overflow-x-hidden">
 
-    <div class="container">
-        <!-- 頂部導覽 -->
-        <header>
-            <h1 id="t-title">💼 摸魚計時器 v2.1</h1>
-            <div class="btn-group">
-                <button onclick="toggleLang()" id="langBtn">简 / 繁</button>
-                <button onclick="toggleTheme()">☀️ / 🌙</button>
-                <button onclick="openModal()" id="t-sponsorBtn">☕ 贊助作者</button>
-            </div>
-        </header>
+    <!-- 🔮 背景光暈裝飾 -->
+    <div class="fixed top-[-10%] left-[-10%] w-96 h-96 bg-orange-500/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none"></div>
 
-        <!-- 設定面板 -->
-        <div class="card">
-            <div class="settings-grid">
-                <div class="input-group">
-                    <label id="t-modeLabel">計算模式</label>
-                    <select id="salaryType" onchange="toggleSalaryType()">
-                        <option value="monthly" id="t-optMonthly">月薪制</option>
-                        <option value="daily" id="t-optDaily">日薪制</option>
-                    </select>
-                </div>
-                <div class="input-group" id="salaryInputGroup">
-                    <label id="salaryLabel">每月底薪 (元)</label>
-                    <input type="number" id="salaryInput" value="18000" oninput="saveSettings()">
-                </div>
-                <div class="input-group">
-                    <label id="t-startLabel">上班時間</label>
-                    <input type="time" id="startTime" value="09:00" onchange="saveSettings()">
-                </div>
-                <div class="input-group">
-                    <label id="t-endLabel">下班時間</label>
-                    <input type="time" id="endTime" value="18:00" onchange="saveSettings()">
-                </div>
+    <!-- 📱 主容器 -->
+    <main class="w-full max-w-md glass-card rounded-3xl p-6 sm:p-8 shadow-2xl relative z-10 my-4">
+        
+        <!-- 頂部功能列 -->
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2 text-xs text-slate-400 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700/50">
+                <i data-lucide="calendar" class="w-3.5 h-3.5 text-orange-400"></i>
+                <span id="today-date">載入中...</span>
             </div>
             
-            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 10px;">
-                <label class="checkbox-group">
-                    <input type="checkbox" id="isOffDay" onchange="saveSettings()"> <span id="t-offDayLabel">今天放假/休息（不計薪）</span>
-                </label>
-                <label class="checkbox-group">
-                    <input type="checkbox" id="allowOvertime" onchange="saveSettings()"> <span id="t-overtimeLabel">允許加班計薪（超過下班時間繼續計算）</span>
-                </label>
+            <div class="flex items-center gap-2">
+                <!-- 🌐 簡繁切換按鈕 -->
+                <button onclick="toggleLanguage()" class="flex items-center gap-1 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-full border border-slate-700 transition">
+                    <i data-lucide="languages" class="w-3.5 h-3.5 text-orange-400"></i>
+                    <span id="lang-btn-text">简体</span>
+                </button>
+                <!-- ☕ 贊助按鈕 -->
+                <button onclick="toggleDonateModal(true)" class="flex items-center gap-1.5 text-xs bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-3 py-1.5 rounded-full border border-amber-500/30 transition">
+                    <i data-lucide="coffee" class="w-3.5 h-3.5"></i>
+                    <span data-i18n="donate">贊助作者</span>
+                </button>
             </div>
         </div>
 
-        <!-- 薪水與進度主面板 -->
-        <div class="card">
-            <div class="money-display">
-                <div class="money-title" id="t-moneyTitle">今日已入帳薪資</div>
-                <div class="money-amount" id="earnedMoney">￥0.00</div>
+        <!-- 狀態標題 -->
+        <div class="text-center mb-4">
+            <h1 id="status-title" class="text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-300 to-yellow-400">
+                ⚙️ 請先完成基本設置
+            </h1>
+        </div>
+
+        <!-- ⏳ 倒計時器 -->
+        <div class="grid grid-cols-3 gap-3 my-4">
+            <div class="bg-slate-800/90 border border-slate-700/60 rounded-2xl p-3 text-center glow-orange">
+                <div id="hours" class="text-3xl sm:text-4xl font-extrabold text-orange-400 font-mono-num">--</div>
+                <div class="text-[10px] sm:text-xs text-slate-400 mt-1" data-i18n="hours">小時</div>
             </div>
-
-            <div class="progress-section">
-                <div class="progress-row">
-                    <span id="t-progressLabel">上班進度</span>
-                    <span id="timePercent">0.0%</span>
-                </div>
-                <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" id="timeProgressBar"></div>
-                </div>
-
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-label" id="t-remainingLabel">剩餘工作時間</div>
-                        <div class="stat-value" id="remainingTime">--:--:--</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label" id="t-levelLabel">今日摸魚評級</div>
-                        <div class="stat-value" id="moyuLevel">🚀 高效運轉</div>
-                    </div>
-                </div>
+            <div class="bg-slate-800/90 border border-slate-700/60 rounded-2xl p-3 text-center glow-orange">
+                <div id="minutes" class="text-3xl sm:text-4xl font-extrabold text-amber-400 font-mono-num">--</div>
+                <div class="text-[10px] sm:text-xs text-slate-400 mt-1" data-i18n="minutes">分鐘</div>
+            </div>
+            <div class="bg-slate-800/90 border border-slate-700/60 rounded-2xl p-3 text-center glow-orange">
+                <div id="seconds" class="text-3xl sm:text-4xl font-extrabold text-yellow-400 font-mono-num">--</div>
+                <div class="text-[10px] sm:text-xs text-slate-400 mt-1" data-i18n="seconds">秒</div>
             </div>
         </div>
 
-        <!-- 日曆模式統計 -->
-        <div class="card calendar-card">
-            <div class="calendar-header">
-                <h3 style="font-size: 1rem;" id="calendarTitle">本月收入統計</h3>
-                <div class="btn-group">
-                    <button onclick="changeMonth(-1)">◀</button>
-                    <button onclick="resetMonth()" id="t-currentMonthBtn">本月</button>
-                    <button onclick="changeMonth(1)">▶</button>
-                </div>
+        <!-- 💰 薪資即時卡片 -->
+        <div class="bg-gradient-to-br from-emerald-950/60 to-slate-900/90 border border-emerald-500/30 rounded-2xl p-5 mb-5 text-center relative overflow-hidden glow-green">
+            <div class="text-xs font-medium text-emerald-400/90 flex items-center justify-center gap-1.5 mb-1">
+                <i data-lucide="coins" class="w-4 h-4"></i>
+                <span data-i18n="earned_title">今日已賺取薪資</span>
             </div>
-            <div class="calendar-grid" id="calendarGrid">
-                <!-- 動態生成日曆 -->
+            <div class="text-4xl sm:text-5xl font-black text-emerald-400 font-mono-num my-1 tracking-tight">
+                <span id="currency-symbol">$</span><span id="earned-money">0.00</span>
+            </div>
+            <div class="text-[11px] text-emerald-300/70 font-mono-num mt-1">
+                <span data-i18n="per_second">每秒進帳</span>：<span id="currency-symbol-sub">$</span><span id="per-second">0.0000</span>
             </div>
         </div>
 
-        <footer>
-            <p id="t-footer">Made with ❤️ for 摸魚人 | <a href="#" onclick="openModal()">支持作者</a></p>
-        </footer>
-    </div>
-
-    <!-- 贊助 Modal -->
-    <div class="modal" id="sponsorModal" onclick="closeModal(event)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h3 id="t-modalTitle">贊助一杯咖啡 ☕</h3>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;" id="t-modalDesc">如果這個工具對你有幫助，歡迎贊助支持！</p>
-            <div class="qr-images">
-                <div class="qr-item">
-                    <img src="wechat-qr.png" alt="微信收款碼">
-                    <p id="t-wechatText">微信支付</p>
-                </div>
-                <div class="qr-item">
-                    <img src="alipay-qr.png" alt="支付寶收款碼">
-                    <p id="t-alipayText">支付寶</p>
-                </div>
+        <!-- 📊 今日打工進度條 -->
+        <div class="mb-5">
+            <div class="flex justify-between text-xs text-slate-400 mb-2 font-medium">
+                <span class="flex items-center gap-1"><i data-lucide="battery-charging" class="w-3.5 h-3.5 text-orange-400"></i> <span data-i18n="progress_title">今日打工進度</span></span>
+                <span id="progress-percent" class="font-mono-num text-orange-400 font-bold">0%</span>
             </div>
-            <button onclick="closeModal()" style="width: 100%; margin-top: 10px;" id="t-closeBtn">關閉窗口</button>
+            <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden p-0.5 border border-slate-700/50">
+                <div id="progress-fill" class="h-full bg-gradient-to-r from-orange-500 via-amber-400 to-yellow-400 rounded-full transition-all duration-500 ease-out w-0"></div>
+            </div>
         </div>
-    </div>
 
-    <script>
-        // 語系詞典設定 ('hant' = 繁體, 'hans' = 簡體)
-        let currentLang = localStorage.getItem('moyu_lang') || 'hant';
+        <!-- 💬 摸魚金句語錄 -->
+        <div class="bg-slate-800/50 border border-slate-700/40 rounded-xl p-3.5 text-xs text-amber-300/90 flex items-start gap-2.5 mb-5">
+            <i data-lucide="quote" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5"></i>
+            <span id="quote-text" class="leading-relaxed">載入中...</span>
+        </div>
 
-        const i18n = {
-            hant: {
-                title: "💼 摸魚計時器 v2.1",
-                sponsorBtn: "☕ 贊助作者",
-                modeLabel: "計算模式",
-                optMonthly: "月薪制",
-                optDaily: "日薪制",
-                monthlyLabel: "每月底薪 (元)",
-                dailyLabel: "每日日薪 (元)",
-                startLabel: "上班時間",
-                endLabel: "下班時間",
-                offDayLabel: "今天放假/休息（不計薪）",
-                overtimeLabel: "允許加班計薪（超過下班時間繼續計算）",
-                moneyTitle: "今日已入帳薪資",
-                progressLabel: "上班進度",
-                remainingLabel: "剩餘工作時間",
-                levelLabel: "今日摸魚評級",
-                currentMonthBtn: "本月",
-                footer: 'Made with ❤️ for 摸魚人 | <a href="#" onclick="openModal()">支持作者</a>',
-                modalTitle: "贊助一杯咖啡 ☕",
-                modalDesc: "如果這個工具對你有幫助，歡迎贊助支持！",
-                wechatText: "微信支付",
-                alipayText: "支付寶",
-                closeBtn: "關閉窗口",
-                offDayText: "今日放假",
-                restText: "今日休息",
-                notStarted: "⏳ 尚未上班",
-                overtimeWork: "加班中 (+1.5x)",
-                offWork: "今日已下班",
-                successOff: "勝利下班",
-                weekdays: ['日', '一', '二', '三', '四', '五', '六'],
-                levels: ['🍵 帶薪拉屎中', '👀 深度摸魚', '☕ 思考人生', '💻 象徵性辦公', '⚡ 衝刺下班', '🔥 燃燒靈魂', '🌴 享受假期', '🚀 高效運轉']
-            },
-            hans: {
-                title: "💼 摸鱼计时器 v2.1",
-                sponsorBtn: "☕ 赞助作者",
-                modeLabel: "计算模式",
-                optMonthly: "月薪制",
-                optDaily: "日薪制",
-                monthlyLabel: "每月底薪 (元)",
-                dailyLabel: "每日日薪 (元)",
-                startLabel: "上班时间",
-                endLabel: "下班时间",
-                offDayLabel: "今天放假/休息（不计薪）",
-                overtimeLabel: "允许加班计薪（超过下班时间继续计算）",
-                moneyTitle: "今日已入账薪资",
-                progressLabel: "上班进度",
-                remainingLabel: "剩余工作时间",
-                levelLabel: "今日摸鱼评级",
-                currentMonthBtn: "本月",
-                footer: 'Made with ❤️ for 摸鱼人 | <a href="#" onclick="openModal()">支持作者</a>',
-                modalTitle: "赞助一杯咖啡 ☕",
-                modalDesc: "如果这个工具对你有帮助，欢迎赞助支持！",
-                wechatText: "微信支付",
-                alipayText: "支付宝",
-                closeBtn: "关闭窗口",
-                offDayText: "今日放假",
-                restText: "今日休息",
-                notStarted: "⏳ 尚未上班",
-                overtimeWork: "加班中 (+1.5x)",
-                offWork: "今日已下班",
-                successOff: "胜利下班",
-                weekdays: ['日', '一', '二', '三', '四', '五', '六'],
-                levels: ['🍵 带薪拉屎中', '👀 深度摸鱼', '☕ 思考人生', '💻 象征性办公', '⚡ 冲刺下班', '🔥 燃烧灵魂', '🌴 享受假期', '🚀 高效运转']
-            }
-        };
-
-        function toggleLang() {
-            currentLang = currentLang === 'hant' ? 'hans' : 'hant';
-            localStorage.setItem('moyu_lang', currentLang);
-            updateText();
-            calculateSalary();
-        }
-
-        function updateText() {
-            const t = i18n[currentLang];
-            document.getElementById('t-title').innerText = t.title;
-            document.getElementById('t-sponsorBtn').innerText = t.sponsorBtn;
-            document.getElementById('t-modeLabel').innerText = t.modeLabel;
-            document.getElementById('t-optMonthly').innerText = t.optMonthly;
-            document.getElementById('t-optDaily').innerText = t.optDaily;
-            document.getElementById('t-startLabel').innerText = t.startLabel;
-            document.getElementById('t-endLabel').innerText = t.endLabel;
-            document.getElementById('t-offDayLabel').innerText = t.offDayLabel;
-            document.getElementById('t-overtimeLabel').innerText = t.overtimeLabel;
-            document.getElementById('t-moneyTitle').innerText = t.moneyTitle;
-            document.getElementById('t-progressLabel').innerText = t.progressLabel;
-            document.getElementById('t-remainingLabel').innerText = t.remainingLabel;
-            document.getElementById('t-levelLabel').innerText = t.levelLabel;
-            document.getElementById('t-currentMonthBtn').innerText = t.currentMonthBtn;
-            document.getElementById('t-footer').innerHTML = t.footer;
-            document.getElementById('t-modalTitle').innerText = t.modalTitle;
-            document.getElementById('t-modalDesc').innerText = t.modalDesc;
-            document.getElementById('t-wechatText').innerText = t.wechatText;
-            document.getElementById('t-alipayText').innerText = t.alipayText;
-            document.getElementById('t-closeBtn').innerText = t.closeBtn;
-            document.getElementById('langBtn').innerText = currentLang === 'hant' ? '简' : '繁';
+        <!-- ⚙️ 薪資與時間設定 -->
+        <details id="settings-details" class="group bg-slate-800/60 border border-orange-500/50 rounded-2xl overflow-hidden transition mb-4" open>
+            <summary class="flex items-center justify-between p-4 cursor-pointer text-xs font-bold text-orange-300 hover:text-white select-none bg-orange-500/10">
+                <span class="flex items-center gap-2">
+                    <i data-lucide="sliders" class="w-4 h-4 text-orange-400"></i>
+                    <span data-i18n="settings_title">⚙️ 填寫您的薪資與時間設定</span>
+                </span>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform"></i>
+            </summary>
             
-            toggleSalaryType();
-            renderCalendar();
+            <div class="p-4 space-y-3 text-xs border-t border-slate-700/30">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-slate-400 block mb-1" data-i18n="label_currency">貨幣選擇</label>
+                        <select id="currency" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 outline-none focus:border-orange-500 cursor-pointer">
+                            <option value="$">美金 USD ($)</option>
+                            <option value="¥">人民幣 RMB (¥)</option>
+                            <option value="HKD ">港幣 HKD (HK$)</option>
+                            <option value="NT$ ">新台幣 TWD (NT$)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-slate-400 block mb-1" data-i18n="label_calc_type">計薪方式</label>
+                        <select id="calc-type" onchange="toggleCalcType()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 outline-none focus:border-orange-500 cursor-pointer">
+                            <option value="monthly" data-i18n="type_monthly">按月薪計算</option>
+                            <option value="daily" data-i18n="type_daily">按日薪計算</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 動態切換：月薪模式下的欄位 -->
+                <div id="monthly-fields" class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-slate-400 block mb-1" data-i18n="label_salary">月薪金額</label>
+                        <input type="number" id="monthly-salary" placeholder="例如: 25000" step="500" value="" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 outline-none focus:border-orange-500 font-mono-num">
+                    </div>
+                    <div>
+                        <label class="text-slate-400 block mb-1" data-i18n="label_days">每月工作天數</label>
+                        <input type="number" id="work-days" placeholder="例如: 22" step="0.5" value="" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 outline-none focus:border-orange-500 font-mono-num">
+                    </div>
+                </div>
+
+                <!-- 動態切換：日薪模式下的欄位 -->
+                <div id="daily-fields" class="grid grid-cols-1 gap-3 hidden">
+                    <div>
+                        <label class="text-slate-400 block mb-1" data-i18n="label_daily_salary">日薪金額</label>
+                        <input type="number" id="daily-salary" placeholder="例如: 1200" step="50" value="" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 outline-none focus:border-orange-500 font-mono-num">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-3">
+                    <div>
+                        <label class="text-slate-400 block mb-1" data-i18n="label_lunch">午休時間 (分鐘)</label>
+                        <input type="number" id="lunch-minutes" placeholder="例如: 60" step="15" value="" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 outline-none focus:border-orange-500 font-mono-num">
+                    </div>
+                </div>
+
+                <!-- 下拉選單：上班與下班時間 -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-slate-400 block mb-1" data-i18n="label_start">上班時間</label>
+                        <select id="start-time" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 outline-none focus:border-orange-500 font-mono-num cursor-pointer"></select>
+                    </div>
+                    <div>
+                        <label class="text-slate-400 block mb-1" data-i18n="label_off">下班時間</label>
+                        <select id="off-time" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 outline-none focus:border-orange-500 font-mono-num cursor-pointer"></select>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- 🚀 開始計算按鈕 -->
+        <button onclick="startCounting()" class="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-slate-950 font-black rounded-2xl shadow-lg shadow-orange-500/20 transition text-sm flex items-center justify-center gap-2 cursor-pointer">
+            <i data-lucide="play" class="w-4 h-4 fill-current"></i>
+            <span data-i18n="btn_start">保存設定並開始摸魚計時！</span>
+        </button>
+    </main>
+
+    <!-- ☕ 贊助打賞 Modal 視窗 -->
+    <div id="donate-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex-col items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700/80 rounded-3xl p-6 max-w-xs w-full shadow-2xl text-center relative">
+            <button onclick="toggleDonateModal(false)" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <h3 class="text-lg font-bold text-amber-400 mb-1" data-i18n="donate_title">☕ 請作者喝杯咖啡</h3>
+            <p class="text-xs text-slate-400 mb-4" data-i18n="donate_desc">覺得好用？歡迎掃碼贊助支持！</p>
+            
+            <div class="flex bg-slate-800 p-1 rounded-xl mb-4 text-xs font-medium">
+                <button onclick="switchDonateTab('wechat')" id="tab-wechat" class="flex-1 py-2 rounded-lg bg-emerald-600 text-white transition" data-i18n="tab_wechat">微信支付</button>
+                <button onclick="switchDonateTab('alipay')" id="tab-alipay" class="flex-1 py-2 rounded-lg text-slate-400 transition" data-i18n="tab_alipay">支付寶</button>
+            </div>
+
+            <div class="bg-white p-3 rounded-2xl mb-4 inline-block shadow-inner">
+                <img id="qr-wechat" src="wechat-qr.png" alt="微信收款碼" class="w-48 h-48 object-contain mx-auto">
+                <img id="qr-alipay" src="alipay-qr.png" alt="支付寶收款碼" class="w-48 h-48 object-contain mx-auto hidden">
+            </div>
+
+            <p class="text-[10px] text-slate-500" data-i18n="donate_footer">感謝您的支持，讓摸魚更有動力！</p>
+        </div>
+    </div>
+
+    <!-- 🎉 下班慶祝 Modal -->
+    <div id="celebration" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-40 hidden flex-col items-center justify-center p-6 text-center">
+        <div class="bg-slate-900 border border-emerald-500/40 rounded-3xl p-8 max-w-sm w-full shadow-2xl glow-green relative overflow-hidden">
+            <div class="text-6xl mb-3">🎉</div>
+            <h2 class="text-3xl font-black text-emerald-400 mb-2" data-i18n="celeb_title">下班啦！</h2>
+            <p class="text-sm text-slate-300 mb-4" data-i18n="celeb_desc">辛苦了！今日薪資已安全落袋！💰</p>
+            <div class="bg-emerald-950/80 border border-emerald-500/30 rounded-2xl p-4 mb-5">
+                <div class="text-xs text-emerald-400/80 mb-1" data-i18n="celeb_pocket">今日落袋金額</div>
+                <div id="final-money" class="text-4xl font-extrabold text-emerald-300 font-mono-num">$0.00</div>
+            </div>
+            <p class="text-xs text-slate-400 mb-6" data-i18n="celeb_footer">收拾東西，火速撤離現場！🏃‍♂️💨</p>
+            <button onclick="dismissCelebration()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg transition" data-i18n="celeb_btn">
+                收到，開始享受生活！ ✨
+            </button>
+        </div>
+    </div>
+
+<script>
+    lucide.createIcons();
+
+    // 🌐 多語言字典
+    const i18nData = {
+        zh: {
+            title: "⚡ 下班倒計時 & 賺錢計數器 - 摸魚神器",
+            donate: "贊助作者",
+            status_init: "⚙️ 請先完成基本設置",
+            status_before: "⏰ 距離上班還有…",
+            status_off: "🎉 今日已下班！",
+            status_working: "🚀 距自由還有…",
+            hours: "小時",
+            minutes: "分鐘",
+            seconds: "秒",
+            earned_title: "今日已賺取薪資",
+            per_second: "每秒進帳",
+            progress_title: "今日打工進度",
+            settings_title: "⚙️ 填寫您的薪資與時間設定",
+            label_currency: "貨幣選擇",
+            label_calc_type: "計薪方式",
+            type_monthly: "按月薪計算",
+            type_daily: "按日薪計算",
+            label_salary: "月薪金額",
+            label_daily_salary: "日薪金額",
+            label_days: "每月工作天數",
+            label_lunch: "午休時間 (分鐘)",
+            label_start: "上班時間",
+            label_off: "下班時間",
+            btn_start: "保存設定並開始摸魚計時！",
+            donate_title: "☕ 請作者喝杯咖啡",
+            donate_desc: "覺得好用？歡迎掃碼贊助支持！",
+            tab_wechat: "微信支付",
+            tab_alipay: "支付寶",
+            donate_footer: "感謝您的支持，讓摸魚更有動力！",
+            celeb_title: "下班啦！",
+            celeb_desc: "辛苦了！今日薪資已安全落袋！💰",
+            celeb_pocket: "今日落袋金額",
+            celeb_footer: "收拾東西，火速撤離現場！🏃‍♂️💨",
+            celeb_btn: "收到，開始享受生活！ ✨",
+            select_hint: "請選擇...",
+            alert_salary: "請先輸入有效的月薪金額！",
+            alert_daily_salary: "請先輸入有效的日薪金額！",
+            alert_days: "請先輸入每月工作天數！",
+            alert_lunch: "請輸入午休時間（若無午休請填 0）！",
+            alert_start: "請選擇上班時間！",
+            alert_off: "請選擇下班時間！",
+            quotes: [
+                "工作再累，也不能忘了摸魚！",
+                "認真工作是拿薪水換，偷懶摸魚才是從老闆身上賺錢！",
+                "看著錢包變厚，感覺加班也沒那麼難受了（假的）。",
+                "再忍忍，馬上就能離場了！",
+                "今日事，今日畢；今天做不完，明天繼續摸！",
+                "下班後的空氣，連呼吸都是甜的。",
+                "每一秒鐘，你都在為自己的夢想（或外賣）累積資金！"
+            ]
+        },
+        cn: {
+            title: "⚡ 下班倒计时 & 赚钱计数器 - 摸鱼神器",
+            donate: "赞助作者",
+            status_init: "⚙️ 请先完成基本设置",
+            status_before: "⏰ 距离上班还有…",
+            status_off: "🎉 今日已下班！",
+            status_working: "🚀 距自由还有…",
+            hours: "小时",
+            minutes: "分钟",
+            seconds: "秒",
+            earned_title: "今日已赚取薪资",
+            per_second: "每秒进账",
+            progress_title: "今日打工进度",
+            settings_title: "⚙️ 填写您的薪资与时间设定",
+            label_currency: "货币选择",
+            label_calc_type: "计薪方式",
+            type_monthly: "按月薪计算",
+            type_daily: "按日薪计算",
+            label_salary: "月薪金额",
+            label_daily_salary: "日薪金额",
+            label_days: "每月工作天数",
+            label_lunch: "午休时间 (分钟)",
+            label_start: "上班时间",
+            label_off: "下班时间",
+            btn_start: "保存设定并开始摸鱼计时！",
+            donate_title: "☕ 请作者喝杯咖啡",
+            donate_desc: "觉得好用？欢迎扫码赞助支持！",
+            tab_wechat: "微信支付",
+            tab_alipay: "支付宝",
+            donate_footer: "感谢您的支持，让摸鱼更有动力！",
+            celeb_title: "下班啦！",
+            celeb_desc: "辛苦了！今日薪资已安全落袋！💰",
+            celeb_pocket: "今日落袋金额",
+            celeb_footer: "收拾东西，火速撤离现场！🏃‍♂️💨",
+            celeb_btn: "收到，开始享受生活！ ✨",
+            select_hint: "请选择...",
+            alert_salary: "请先输入有效的月薪金额！",
+            alert_daily_salary: "请先输入有效的日薪金额！",
+            alert_days: "请先输入每月工作天数！",
+            alert_lunch: "请输入午休时间（若无午休请填 0）！",
+            alert_start: "请选择上班时间！",
+            alert_off: "请选择下班时间！",
+            quotes: [
+                "工作再累，也不能忘了摸鱼！",
+                "认真工作是拿薪水换，偷懒摸鱼才是从老板身上赚钱！",
+                "看着钱包变厚，感觉加班也没那么难受了（假的）。",
+                "再忍忍，马上就能离场了！",
+                "今日事，今日毕；今天做不完，明天继续摸！",
+                "下班后的空气，连呼吸都是甜的。",
+                "每一秒钟，你都在为自己的梦想（或外卖）积累资金！"
+            ]
         }
+    };
 
-        // 初始化與讀取設定
-        let settings = JSON.parse(localStorage.getItem('moyu_settings')) || {
-            salaryType: 'monthly',
-            salary: 18000,
-            startTime: '09:00',
-            endTime: '18:00',
-            isOffDay: false,
-            allowOvertime: true
-        };
+    let currentLang = localStorage.getItem('app_lang') || 'zh';
 
-        let earningsHistory = JSON.parse(localStorage.getItem('moyu_earnings_history')) || {};
-        let currentYear = new Date().getFullYear();
-        let currentMonth = new Date().getMonth();
+    function setLanguage(lang) {
+        currentLang = lang;
+        localStorage.setItem('app_lang', lang);
+        
+        document.getElementById('lang-btn-text').innerText = (lang === 'zh') ? '简体' : '繁體';
+        document.documentElement.setAttribute('lang', lang === 'zh' ? 'zh-Hant' : 'zh-Hans');
 
-        function initForm() {
-            document.getElementById('salaryType').value = settings.salaryType;
-            document.getElementById('salaryInput').value = settings.salary;
-            document.getElementById('startTime').value = settings.startTime;
-            document.getElementById('endTime').value = settings.endTime;
-            document.getElementById('isOffDay').checked = settings.isOffDay;
-            document.getElementById('allowOvertime').checked = settings.allowOvertime;
-            updateText();
-        }
-
-        function toggleSalaryType() {
-            const type = document.getElementById('salaryType').value;
-            const label = document.getElementById('salaryLabel');
-            const t = i18n[currentLang];
-            if (type === 'monthly') {
-                label.innerText = t.monthlyLabel;
-            } else {
-                label.innerText = t.dailyLabel;
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (i18nData[currentLang][key]) {
+                el.innerText = i18nData[currentLang][key];
             }
-            saveSettings();
+        });
+
+        document.getElementById('page-title').innerText = i18nData[currentLang].title;
+        updateTimeOptions();
+        updateQuote();
+    }
+
+    function toggleLanguage() {
+        setLanguage(currentLang === 'zh' ? 'cn' : 'zh');
+    }
+
+    function updateQuote() {
+        const quotes = i18nData[currentLang].quotes;
+        quoteTextEl.innerText = quotes[Math.floor(Math.random() * quotes.length)];
+    }
+
+    const calcTypeSelect = document.getElementById('calc-type');
+    const monthlyFields = document.getElementById('monthly-fields');
+    const dailyFields = document.getElementById('daily-fields');
+    const monthlySalaryInput = document.getElementById('monthly-salary');
+    const dailySalaryInput = document.getElementById('daily-salary');
+    const workDaysInput = document.getElementById('work-days');
+    const lunchMinutesInput = document.getElementById('lunch-minutes');
+    const startTimeSelect = document.getElementById('start-time');
+    const offTimeSelect = document.getElementById('off-time');
+    const currencySelect = document.getElementById('currency');
+    const todayDateEl = document.getElementById('today-date');
+    const quoteTextEl = document.getElementById('quote-text');
+    const statusTitleEl = document.getElementById('status-title');
+    const celebrationEl = document.getElementById('celebration');
+    const donateModalEl = document.getElementById('donate-modal');
+    const settingsDetails = document.getElementById('settings-details');
+
+    let celebrationTriggered = false;
+    let timerInterval = null;
+
+    function toggleCalcType() {
+        const type = calcTypeSelect.value;
+        if (type === 'daily') {
+            monthlyFields.classList.add('hidden');
+            dailyFields.classList.remove('hidden');
+        } else {
+            dailyFields.classList.add('hidden');
+            monthlyFields.classList.remove('hidden');
         }
+    }
 
-        function saveSettings() {
-            settings.salaryType = document.getElementById('salaryType').value;
-            settings.salary = parseFloat(document.getElementById('salaryInput').value) || 0;
-            settings.startTime = document.getElementById('startTime').value;
-            settings.endTime = document.getElementById('endTime').value;
-            settings.isOffDay = document.getElementById('isOffDay').checked;
-            settings.allowOvertime = document.getElementById('allowOvertime').checked;
-            localStorage.setItem('moyu_settings', JSON.stringify(settings));
-        }
-
-        function calculateSalary() {
-            saveSettings();
-            const now = new Date();
-            const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-            const t = i18n[currentLang];
-
-            if (settings.isOffDay) {
-                document.getElementById('earnedMoney').innerText = `￥0.00 (${t.offDayText})`;
-                document.getElementById('timePercent').innerText = '0.0%';
-                document.getElementById('timeProgressBar').style.width = '0%';
-                document.getElementById('remainingTime').innerText = t.restText;
-                document.getElementById('moyuLevel').innerText = currentLang === 'hant' ? '🌴 享受假期' : '🌴 享受假期';
-                return;
-            }
-
-            const [startH, startM] = settings.startTime.split(':').map(Number);
-            const [endH, endM] = settings.endTime.split(':').map(Number);
-
-            const startTimeSec = startH * 3600 + startM * 60;
-            const endTimeSec = endH * 3600 + endM * 60;
-            const nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
-
-            const totalWorkSec = endTimeSec - startTimeSec;
-            if (totalWorkSec <= 0) {
-                document.getElementById('remainingTime').innerText = '時間設定錯誤';
-                return;
-            }
-
-            let dailyTotalSalary = settings.salaryType === 'monthly' ? settings.salary / 21.75 : settings.salary;
-            let perSecondSalary = dailyTotalSalary / totalWorkSec;
-
-            let earned = 0;
-            let percent = 0;
-
-            if (nowSec < startTimeSec) {
-                earned = 0;
-                percent = 0;
-                document.getElementById('remainingTime').innerText = formatTime(startTimeSec - nowSec);
-                document.getElementById('moyuLevel').innerText = t.notStarted;
-            } else if (nowSec >= startTimeSec && nowSec <= endTimeSec) {
-                let workedSec = nowSec - startTimeSec;
-                earned = workedSec * perSecondSalary;
-                percent = (workedSec / totalWorkSec) * 100;
-                document.getElementById('remainingTime').innerText = formatTime(endTimeSec - nowSec);
-                document.getElementById('moyuLevel').innerText = getMoyuLevel(percent);
-            } else {
-                if (settings.allowOvertime) {
-                    let overtimeSec = nowSec - endTimeSec;
-                    let overtimeEarned = overtimeSec * (perSecondSalary * 1.5);
-                    earned = dailyTotalSalary + overtimeEarned;
-                    percent = 100;
-                    document.getElementById('remainingTime').innerText = t.overtimeWork;
-                    document.getElementById('moyuLevel').innerText = currentLang === 'hant' ? '🔥 燃燒靈魂' : '🔥 燃烧灵魂';
-                } else {
-                    earned = dailyTotalSalary;
-                    percent = 100;
-                    document.getElementById('remainingTime').innerText = t.offWork;
-                    document.getElementById('moyuLevel').innerText = t.successOff;
+    function updateTimeOptions() {
+        const sVal = startTimeSelect.value;
+        const oVal = offTimeSelect.value;
+        const selects = [startTimeSelect, offTimeSelect];
+        
+        selects.forEach(select => {
+            const currentVal = select === startTimeSelect ? sVal : oVal;
+            select.innerHTML = `<option value="">${i18nData[currentLang].select_hint}</option>`;
+            for (let h = 0; h < 24; h++) {
+                for (let m of [0, 30]) {
+                    const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                    const opt = document.createElement('option');
+                    opt.value = timeStr;
+                    opt.textContent = timeStr;
+                    select.appendChild(opt);
                 }
             }
+            select.value = currentVal;
+        });
+    }
 
-            document.getElementById('earnedMoney').innerText = `￥${earned.toFixed(2)}`;
-            document.getElementById('timePercent').innerText = `${percent.toFixed(1)}%`;
-            document.getElementById('timeProgressBar').style.width = `${Math.min(percent, 100)}%`;
+    updateTimeOptions();
 
-            earningsHistory[todayStr] = parseFloat(earned.toFixed(2));
-            localStorage.setItem('moyu_earnings_history', JSON.stringify(earningsHistory));
+    const now = new Date();
+    todayDateEl.innerText = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
 
-            renderCalendar();
+    function toggleDonateModal(show) {
+        if (show) {
+            donateModalEl.classList.remove('hidden');
+            donateModalEl.classList.add('flex');
+        } else {
+            donateModalEl.classList.add('hidden');
+            donateModalEl.classList.remove('flex');
         }
+    }
 
-        function formatTime(sec) {
-            const h = String(Math.floor(sec / 3600)).padStart(2, '0');
-            const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
-            const s = String(sec % 60).padStart(2, '0');
-            return `${h}:${m}:${s}`;
+    function switchDonateTab(type) {
+        const btnWechat = document.getElementById('tab-wechat');
+        const btnAlipay = document.getElementById('tab-alipay');
+        const qrWechat = document.getElementById('qr-wechat');
+        const qrAlipay = document.getElementById('qr-alipay');
+
+        if (type === 'wechat') {
+            btnWechat.className = "flex-1 py-2 rounded-lg bg-emerald-600 text-white transition";
+            btnAlipay.className = "flex-1 py-2 rounded-lg text-slate-400 transition";
+            qrWechat.classList.remove('hidden');
+            qrAlipay.classList.add('hidden');
+        } else {
+            btnAlipay.className = "flex-1 py-2 rounded-lg bg-blue-600 text-white transition";
+            btnWechat.className = "flex-1 py-2 rounded-lg text-slate-400 transition";
+            qrAlipay.classList.remove('hidden');
+            qrWechat.classList.add('hidden');
         }
+    }
 
-        function getMoyuLevel(percent) {
-            const levels = i18n[currentLang].levels;
-            if (percent < 20) return levels[0];
-            if (percent < 40) return levels[1];
-            if (percent < 60) return levels[2];
-            if (percent < 80) return levels[3];
-            return levels[4];
+    function loadSettings() {
+        if (localStorage.getItem('calc_type')) {
+            calcTypeSelect.value = localStorage.getItem('calc_type');
         }
+        toggleCalcType();
 
-        function renderCalendar() {
-            const grid = document.getElementById('calendarGrid');
-            const title = document.getElementById('calendarTitle');
-            const t = i18n[currentLang];
-            grid.innerHTML = '';
+        if (localStorage.getItem('m_salary')) monthlySalaryInput.value = localStorage.getItem('m_salary');
+        if (localStorage.getItem('d_salary')) dailySalaryInput.value = localStorage.getItem('d_salary');
+        if (localStorage.getItem('w_days')) workDaysInput.value = localStorage.getItem('w_days');
+        if (localStorage.getItem('l_mins')) lunchMinutesInput.value = localStorage.getItem('l_mins');
+        if (localStorage.getItem('s_time')) startTimeSelect.value = localStorage.getItem('s_time');
+        if (localStorage.getItem('o_time')) offTimeSelect.value = localStorage.getItem('o_time');
+        if (localStorage.getItem('c_symbol')) currencySelect.value = localStorage.getItem('c_symbol');
+        
+        updateCurrencySymbols();
 
-            title.innerText = currentLang === 'hant' ? `${currentYear}年${currentMonth + 1}月收入統計` : `${currentYear}年${currentMonth + 1}月收入统计`;
+        const type = calcTypeSelect.value;
+        const salaryValid = (type === 'monthly') ? (parseFloat(monthlySalaryInput.value) > 0 && parseFloat(workDaysInput.value) > 0) : (parseFloat(dailySalaryInput.value) > 0);
+        const sTime = startTimeSelect.value;
+        const oTime = offTimeSelect.value;
 
-            t.weekdays.forEach(w => {
-                const div = document.createElement('div');
-                div.className = 'calendar-weekday';
-                div.innerText = w;
-                grid.appendChild(div);
-            });
+        if (salaryValid && sTime && oTime) {
+            settingsDetails.removeAttribute('open');
+            startCounting();
+        } else {
+            settingsDetails.setAttribute('open', '');
+            statusTitleEl.innerText = i18nData[currentLang].status_init;
+        }
+    }
 
-            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-            const today = new Date();
+    function saveSettings() {
+        localStorage.setItem('calc_type', calcTypeSelect.value);
+        localStorage.setItem('m_salary', monthlySalaryInput.value);
+        localStorage.setItem('d_salary', dailySalaryInput.value);
+        localStorage.setItem('w_days', workDaysInput.value);
+        localStorage.setItem('l_mins', lunchMinutesInput.value);
+        localStorage.setItem('s_time', startTimeSelect.value);
+        localStorage.setItem('o_time', offTimeSelect.value);
+        localStorage.setItem('c_symbol', currencySelect.value);
+    }
 
-            for (let i = 0; i < firstDay; i++) {
-                const empty = document.createElement('div');
-                grid.appendChild(empty);
+    function updateCurrencySymbols() {
+        const symbol = currencySelect.value;
+        document.getElementById('currency-symbol').innerText = symbol;
+        document.getElementById('currency-symbol-sub').innerText = symbol;
+    }
+
+    function startCounting() {
+        const type = calcTypeSelect.value;
+        const mSalary = parseFloat(monthlySalaryInput.value);
+        const dSalary = parseFloat(dailySalaryInput.value);
+        const days = parseFloat(workDaysInput.value);
+        const lunch = lunchMinutesInput.value !== '' ? parseFloat(lunchMinutesInput.value) : null;
+        const sTime = startTimeSelect.value;
+        const oTime = offTimeSelect.value;
+        const t = i18nData[currentLang];
+
+        if (type === 'monthly') {
+            if (!mSalary || mSalary <= 0) {
+                alert(t.alert_salary);
+                settingsDetails.setAttribute('open', '');
+                monthlySalaryInput.focus();
+                return;
             }
-
-            for (let day = 1; day <= daysInMonth; day++) {
-                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const dayEarned = earningsHistory[dateStr] || 0;
-
-                const dayDiv = document.createElement('div');
-                dayDiv.className = 'calendar-day';
-                
-                const isToday = today.getFullYear() === currentYear && today.getMonth() === currentMonth && today.getDate() === day;
-                if (isToday) dayDiv.classList.add('today');
-                if (dayEarned > 0) dayDiv.classList.add('active');
-
-                dayDiv.innerHTML = `
-                    <strong>${day}</strong>
-                    <span>${dayEarned > 0 ? '￥' + Math.round(dayEarned) : ''}</span>
-                `;
-                grid.appendChild(dayDiv);
+            if (!days || days <= 0) {
+                alert(t.alert_days);
+                settingsDetails.setAttribute('open', '');
+                workDaysInput.focus();
+                return;
+            }
+        } else {
+            if (!dSalary || dSalary <= 0) {
+                alert(t.alert_daily_salary);
+                settingsDetails.setAttribute('open', '');
+                dailySalaryInput.focus();
+                return;
             }
         }
 
-        function changeMonth(direction) {
-            currentMonth += direction;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            } else if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            }
-            renderCalendar();
+        if (lunch === null || isNaN(lunch) || lunch < 0) {
+            alert(t.alert_lunch);
+            settingsDetails.setAttribute('open', '');
+            lunchMinutesInput.focus();
+            return;
+        }
+        if (!sTime) {
+            alert(t.alert_start);
+            settingsDetails.setAttribute('open', '');
+            startTimeSelect.focus();
+            return;
+        }
+        if (!oTime) {
+            alert(t.alert_off);
+            settingsDetails.setAttribute('open', '');
+            offTimeSelect.focus();
+            return;
         }
 
-        function resetMonth() {
-            const today = new Date();
-            currentYear = today.getFullYear();
-            currentMonth = today.getMonth();
-            renderCalendar();
-        }
+        saveSettings();
+        updateCurrencySymbols();
+        celebrationTriggered = false;
+        settingsDetails.removeAttribute('open');
 
-        function toggleTheme() {
-            const body = document.body;
-            if (body.getAttribute('data-theme') === 'dark') {
-                body.setAttribute('data-theme', 'light');
+        updateTimer();
+        if (!timerInterval) {
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+    }
+
+    setLanguage(currentLang);
+    loadSettings();
+
+    function updateTimer() {
+        const type = calcTypeSelect.value;
+        const mSalary = parseFloat(monthlySalaryInput.value) || 0;
+        const dSalary = parseFloat(dailySalaryInput.value) || 0;
+        const workDays = parseFloat(workDaysInput.value) || 0;
+        const sTime = startTimeSelect.value;
+        const oTime = offTimeSelect.value;
+        const t = i18nData[currentLang];
+
+        const salaryValid = (type === 'monthly') ? (mSalary > 0 && workDays > 0) : (dSalary > 0);
+        if (!salaryValid || !sTime || !oTime) return;
+
+        const currentTime = new Date();
+        const lunchMins = parseFloat(lunchMinutesInput.value) || 0;
+        const symbol = currencySelect.value;
+
+        updateCurrencySymbols();
+
+        const [startHour, startMinute] = sTime.split(':').map(Number);
+        const [targetHour, targetMinute] = oTime.split(':').map(Number);
+
+        let startTime = new Date();
+        startTime.setHours(startHour, startMinute, 0, 0);
+
+        let targetTime = new Date();
+        targetTime.setHours(targetHour, targetMinute, 0, 0);
+
+        const isOvernight = targetTime <= startTime;
+        if (isOvernight) {
+            if (currentTime < startTime && currentTime.getHours() < targetHour) {
+                startTime.setDate(startTime.getDate() - 1);
             } else {
-                body.setAttribute('data-theme', 'dark');
+                targetTime.setDate(targetTime.getDate() + 1);
             }
         }
 
-        function openModal() {
-            document.getElementById('sponsorModal').style.display = 'flex';
-        }
-        function closeModal(event) {
-            if (!event || event.target.id === 'sponsorModal' || event.target.tagName === 'BUTTON') {
-                document.getElementById('sponsorModal').style.display = 'none';
-            }
+        // 根據計薪方式計算每日總薪資
+        const dailySalary = (type === 'monthly') ? (mSalary / workDays) : dSalary;
+
+        const totalSpanSeconds = (targetTime - startTime) / 1000;
+        const actualWorkSeconds = Math.max(1, totalSpanSeconds - (lunchMins * 60));
+        const perSecondSalary = actualWorkSeconds > 0 ? (dailySalary / actualWorkSeconds) : 0;
+
+        document.getElementById('per-second').innerText = perSecondSalary.toFixed(4);
+
+        if (currentTime < startTime) {
+            celebrationEl.classList.add('hidden');
+            celebrationEl.classList.remove('flex');
+            celebrationTriggered = false;
+            statusTitleEl.innerText = t.status_before;
+            
+            const diffStart = startTime - currentTime;
+            updateDisplayTime(diffStart);
+            
+            document.getElementById('earned-money').innerText = '0.00';
+            document.getElementById('progress-fill').style.width = '0%';
+            document.getElementById('progress-percent').innerText = '0%';
+            return;
         }
 
-        initForm();
-        setInterval(calculateSalary, 1000);
-        calculateSalary();
-    </script>
+        if (currentTime >= targetTime) {
+            statusTitleEl.innerText = t.status_off;
+            if (!celebrationTriggered) {
+                celebrationEl.classList.remove('hidden');
+                celebrationEl.classList.add('flex');
+                triggerConfetti();
+                celebrationTriggered = true;
+            }
+            document.getElementById('hours').innerText = '00';
+            document.getElementById('minutes').innerText = '00';
+            document.getElementById('seconds').innerText = '00';
+            document.getElementById('progress-fill').style.width = '100%';
+            document.getElementById('progress-percent').innerText = '100%';
+            document.getElementById('earned-money').innerText = dailySalary.toFixed(2);
+            document.getElementById('final-money').innerText = `${symbol}${dailySalary.toFixed(2)}`;
+            return;
+        }
+
+        statusTitleEl.innerText = t.status_working;
+        celebrationEl.classList.add('hidden');
+        celebrationEl.classList.remove('flex');
+        celebrationTriggered = false;
+
+        let elapsedTotalSeconds = (currentTime - startTime) / 1000;
+        let elapsedWorkSeconds = Math.max(0, elapsedTotalSeconds - (lunchMins * 60));
+        if (elapsedTotalSeconds < (lunchMins * 60)) {
+            elapsedWorkSeconds = elapsedTotalSeconds * (actualWorkSeconds / totalSpanSeconds);
+        }
+
+        const currentEarned = Math.min(dailySalary, elapsedWorkSeconds * perSecondSalary);
+        document.getElementById('earned-money').innerText = currentEarned.toFixed(2);
+
+        const diff = targetTime - currentTime;
+        updateDisplayTime(diff);
+
+        let percent = Math.min(100, Math.max(0, Math.floor((elapsedTotalSeconds / totalSpanSeconds) * 100)));
+        document.getElementById('progress-fill').style.width = percent + '%';
+        document.getElementById('progress-percent').innerText = percent + '%';
+    }
+
+    function updateDisplayTime(ms) {
+        const hours = Math.floor(ms / (1000 * 60 * 60));
+        const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+
+        document.getElementById('hours').innerText = String(hours).padStart(2, '0');
+        document.getElementById('minutes').innerText = String(minutes).padStart(2, '0');
+        document.getElementById('seconds').innerText = String(seconds).padStart(2, '0');
+    }
+
+    function dismissCelebration() {
+        celebrationEl.classList.add('hidden');
+        celebrationEl.classList.remove('flex');
+    }
+
+    function triggerConfetti() {
+        if (typeof confetti === 'function') {
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        }
+    }
+</script>
 </body>
 </html>
