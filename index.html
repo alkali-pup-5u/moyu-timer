@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ 下班倒計時 & 賺錢計數器 - 摸魚神器</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #0f172a;
+        }
+        .font-mono-num {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glow-orange {
+            box-shadow: 0 0 25px rgba(249, 115, 22, 0.25);
+        }
+        .glow-green {
+            box-shadow: 0 0 25px rgba(34, 197, 94, 0.25);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-100 flex flex-col items-center justify-center p-4 relative overflow-x-hidden">
+
+    <!-- 🔮 背景光暈裝飾 -->
+    <div class="fixed top-[-10%] left-[-10%] w-96 h-96 bg-orange-500/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- 📱 主容器 -->
+    <main class="w-full max-w-md glass-card rounded-3xl p-6 sm:p-8 shadow-2xl relative z-10 my-4">
+        
+        <!-- 頂部功能列 -->
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2 text-xs text-slate-400 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700/50">
+                <i data-lucide="calendar" class="w-3.5 h-3.5 text-orange-400"></i>
+                <span id="today-date">載入中...</span>
+            </div>
+            <!-- ☕ 贊助按鈕 -->
+            <button onclick="toggleDonateModal(true)" class="flex items-center gap-1.5 text-xs bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-3 py-1.5 rounded-full border border-amber-500/30 transition">
+                <i data-lucide="coffee" class="w-3.5 h-3.5"></i>
+                <span>贊助作者</span>
+            </button>
+        </div>
+
+        <!-- 狀態標題 -->
+        <div class="text-center mb-4">
+            <h1 id="status-title" class="text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-300 to-yellow-400">
+                ⚙️ 請先完成基本設置
+            </h1>
+        </div>
+
+        <!-- ⏳ 倒計時器 -->
+        <div class="grid grid-cols-3 gap-3 my-4">
+            <div class="bg-slate-800/90 border border-slate-700/60 rounded-2xl p-3 text-center glow-orange">
+                <div id="hours" class="text-3xl sm:text-4xl font-extrabold text-orange-400 font-mono-num">--</div>
+                <div class="text-[10px] sm:text-xs text-slate-400 mt-1">小時</div>
+            </div>
+            <div class="bg-slate-800/90 border border-slate-700/60 rounded-2xl p-3 text-center glow-orange">
+                <div id="minutes" class="text-3xl sm:text-4xl font-extrabold text-amber-400 font-mono-num">--</div>
+                <div class="text-[10px] sm:text-xs text-slate-400 mt-1">分鐘</div>
+            </div>
+            <div class="bg-slate-800/90 border border-slate-700/60 rounded-2xl p-3 text-center glow-orange">
+                <div id="seconds" class="text-3xl sm:text-4xl font-extrabold text-yellow-400 font-mono-num">--</div>
+                <div class="text-[10px] sm:text-xs text-slate-400 mt-1">秒</div>
+            </div>
+        </div>
+
+        <!-- 💰 薪資即時卡片 -->
+        <div class="bg-gradient-to-br from-emerald-950/60 to-slate-900/90 border border-emerald-500/30 rounded-2xl p-5 mb-5 text-center relative overflow-hidden glow-green">
+            <div class="text-xs font-medium text-emerald-400/90 flex items-center justify-center gap-1.5 mb-1">
+                <i data-lucide="coins" class="w-4 h-4"></i>
+                <span>今日已賺取薪資</span>
+            </div>
+            <div class="text-4xl sm:text-5xl font-black text-emerald-400 font-mono-num my-1 tracking-tight">
+                <span id="currency-symbol">$</span><span id="earned-money">0.00</span>
+            </div>
+            <div class="text-[11px] text-emerald-300/70 font-mono-num mt-1">
+                每秒進帳：<span id="currency-symbol-sub">$</span><span id="per-second">0.0000</span>
+            </div>
+        </div>
+
+        <!-- 📊 今日打工進度條 -->
+        <div class="mb-5">
+            <div class="flex justify-between text-xs text-slate-400 mb-2 font-medium">
+                <span class="flex items-center gap-1"><i data-lucide="battery-charging" class="w-3.5 h-3.5 text-orange-400"></i> 今日打工進度</span>
+                <span id="progress-percent" class="font-mono-num text-orange-400 font-bold">0%</span>
+            </div>
+            <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden p-0.5 border border-slate-700/50">
+                <div id="progress-fill" class="h-full bg-gradient-to-r from-orange-500 via-amber-400 to-yellow-400 rounded-full transition-all duration-500 ease-out w-0"></div>
+            </div>
+        </div>
+
+        <!-- 💬 摸魚金句語錄 -->
+        <div class="bg-slate-800/50 border border-slate-700/40 rounded-xl p-3.5 text-xs text-amber-300/90 flex items-start gap-2.5 mb-5">
+            <i data-lucide="quote" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5"></i>
+            <span id="quote-text" class="leading-relaxed">載入中...</span>
+        </div>
+
+        <!-- ⚙️ 薪資與時間設定 -->
+        <details id="settings-details" class="group bg-slate-800/60 border border-orange-500/50 rounded-2xl overflow-hidden transition mb-4" open>
+            <summary class="flex items-center justify-between p-4 cursor-pointer text-xs font-bold text-orange-300 hover:text-white select-none bg-orange-500/10">
+                <span class="flex items-center gap-2">
+                    <i data-lucide="sliders" class="w-4 h-4 text-orange-400"></i>
+                    <span>⚙️ 填寫您的薪資與時間設定</span>
+                </span>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform"></i>
+            </summary>
+            
+            <div class="p-4 space-y-3 text-xs border-t border-slate-700/30">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-slate-400 block mb-1">貨幣選擇</label>
+                        <select id="currency" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 outline-none focus:border-orange-500 cursor-pointer">
+                            <option value="$">美金 USD ($)</option>
+                            <option value="¥">人民幣 RMB (¥)</option>
+                            <option value="HKD ">港幣 HKD (HK$)</option>
+                            <option value="NT$ ">新台幣 TWD (NT$)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-slate-400 block mb-1">月薪金額</label>
+                        <input type="number" id="monthly-salary" placeholder="例如: 25000" step="500" value="" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 outline-none focus:border-orange-500 font-mono-num">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-slate-400 block mb-1">每月工作天數</label>
+                        <input type="number" id="work-days" placeholder="例如: 22" step="0.5" value="" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 outline-none focus:border-orange-500 font-mono-num">
+                    </div>
+                    <div>
+                        <label class="text-slate-400 block mb-1">午休時間 (分鐘)</label>
+                        <input type="number" id="lunch-minutes" placeholder="例如: 60" step="15" value="" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 outline-none focus:border-orange-500 font-mono-num">
+                    </div>
+                </div>
+
+                <!-- 下拉選單：上班與下班時間 -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-slate-400 block mb-1">上班時間</label>
+                        <select id="start-time" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 outline-none focus:border-orange-500 font-mono-num cursor-pointer"></select>
+                    </div>
+                    <div>
+                        <label class="text-slate-400 block mb-1">下班時間</label>
+                        <select id="off-time" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 outline-none focus:border-orange-500 font-mono-num cursor-pointer"></select>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- 🚀 開始計算按鈕 -->
+        <button onclick="startCounting()" class="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-slate-950 font-black rounded-2xl shadow-lg shadow-orange-500/20 transition text-sm flex items-center justify-center gap-2 cursor-pointer">
+            <i data-lucide="play" class="w-4 h-4 fill-current"></i>
+            <span>保存設定並開始摸魚計時！</span>
+        </button>
+    </main>
+
+    <!-- ☕ 贊助打賞 Modal 視窗 -->
+    <div id="donate-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex-col items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700/80 rounded-3xl p-6 max-w-xs w-full shadow-2xl text-center relative">
+            <button onclick="toggleDonateModal(false)" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <h3 class="text-lg font-bold text-amber-400 mb-1">☕ 請作者喝杯咖啡</h3>
+            <p class="text-xs text-slate-400 mb-4">覺得好用？歡迎掃碼贊助支持！</p>
+            
+            <div class="flex bg-slate-800 p-1 rounded-xl mb-4 text-xs font-medium">
+                <button onclick="switchDonateTab('wechat')" id="tab-wechat" class="flex-1 py-2 rounded-lg bg-emerald-600 text-white transition">微信支付</button>
+                <button onclick="switchDonateTab('alipay')" id="tab-alipay" class="flex-1 py-2 rounded-lg text-slate-400 transition">支付寶</button>
+            </div>
+
+            <div class="bg-white p-3 rounded-2xl mb-4 inline-block shadow-inner">
+                <img id="qr-wechat" src="wechat-qr.png" alt="微信收款碼" class="w-48 h-48 object-contain mx-auto">
+                <img id="qr-alipay" src="alipay-qr.png" alt="支付寶收款碼" class="w-48 h-48 object-contain mx-auto hidden">
+            </div>
+
+            <p class="text-[10px] text-slate-500">感謝您的支持，讓摸魚更有動力！</p>
+        </div>
+    </div>
+
+    <!-- 🎉 下班慶祝 Modal -->
+    <div id="celebration" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-40 hidden flex-col items-center justify-center p-6 text-center">
+        <div class="bg-slate-900 border border-emerald-500/40 rounded-3xl p-8 max-w-sm w-full shadow-2xl glow-green relative overflow-hidden">
+            <div class="text-6xl mb-3">🎉</div>
+            <h2 class="text-3xl font-black text-emerald-400 mb-2">下班啦！</h2>
+            <p class="text-sm text-slate-300 mb-4">辛苦了！今日薪資已安全落袋！💰</p>
+            <div class="bg-emerald-950/80 border border-emerald-500/30 rounded-2xl p-4 mb-5">
+                <div class="text-xs text-emerald-400/80 mb-1">今日落袋金額</div>
+                <div id="final-money" class="text-4xl font-extrabold text-emerald-300 font-mono-num">$0.00</div>
+            </div>
+            <p class="text-xs text-slate-400 mb-6">收拾東西，火速撤離現場！🏃‍♂️💨</p>
+            <button onclick="dismissCelebration()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg transition">
+                收到，開始享受生活！ ✨
+            </button>
+        </div>
+    </div>
+
+<script>
+    lucide.createIcons();
+
+    const quotes = [
+        "工作再累，也不能忘了摸魚！",
+        "認真工作是拿薪水換，偷懶摸魚才是從老闆身上賺錢！",
+        "看著錢包變厚，感覺加班也沒那麼難受了（假的）。",
+        "再忍忍，馬上就能離場了！",
+        "今日事，今日畢；今天做不完，明天繼續摸！",
+        "下班後的空氣，連呼吸都是甜的。",
+        "每一秒鐘，你都在為自己的夢想（或外賣）累積資金！"
+    ];
+
+    const monthlySalaryInput = document.getElementById('monthly-salary');
+    const workDaysInput = document.getElementById('work-days');
+    const lunchMinutesInput = document.getElementById('lunch-minutes');
+    const startTimeSelect = document.getElementById('start-time');
+    const offTimeSelect = document.getElementById('off-time');
+    const currencySelect = document.getElementById('currency');
+    const todayDateEl = document.getElementById('today-date');
+    const quoteTextEl = document.getElementById('quote-text');
+    const statusTitleEl = document.getElementById('status-title');
+    const celebrationEl = document.getElementById('celebration');
+    const donateModalEl = document.getElementById('donate-modal');
+    const settingsDetails = document.getElementById('settings-details');
+
+    let celebrationTriggered = false;
+    let timerInterval = null;
+
+    // 產生 24 小時下拉選單（預設第一個選項為空）
+    function populateTimeOptions() {
+        const selects = [startTimeSelect, offTimeSelect];
+        selects.forEach(select => {
+            select.innerHTML = '<option value="">請選擇...</option>';
+            for (let h = 0; h < 24; h++) {
+                for (let m of [0, 30]) {
+                    const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                    const opt = document.createElement('option');
+                    opt.value = timeStr;
+                    opt.textContent = timeStr;
+                    select.appendChild(opt);
+                }
+            }
+        });
+    }
+
+    populateTimeOptions();
+
+    // 載入當日日期與金句
+    const now = new Date();
+    todayDateEl.innerText = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
+    quoteTextEl.innerText = quotes[Math.floor(Math.random() * quotes.length)];
+
+    function toggleDonateModal(show) {
+        if (show) {
+            donateModalEl.classList.remove('hidden');
+            donateModalEl.classList.add('flex');
+        } else {
+            donateModalEl.classList.add('hidden');
+            donateModalEl.classList.remove('flex');
+        }
+    }
+
+    function switchDonateTab(type) {
+        const btnWechat = document.getElementById('tab-wechat');
+        const btnAlipay = document.getElementById('tab-alipay');
+        const qrWechat = document.getElementById('qr-wechat');
+        const qrAlipay = document.getElementById('qr-alipay');
+
+        if (type === 'wechat') {
+            btnWechat.className = "flex-1 py-2 rounded-lg bg-emerald-600 text-white transition";
+            btnAlipay.className = "flex-1 py-2 rounded-lg text-slate-400 transition";
+            qrWechat.classList.remove('hidden');
+            qrAlipay.classList.add('hidden');
+        } else {
+            btnAlipay.className = "flex-1 py-2 rounded-lg bg-blue-600 text-white transition";
+            btnWechat.className = "flex-1 py-2 rounded-lg text-slate-400 transition";
+            qrAlipay.classList.remove('hidden');
+            qrWechat.classList.add('hidden');
+        }
+    }
+
+    function loadSettings() {
+        // 僅從 localStorage 回填已儲存的設定（如有）
+        if (localStorage.getItem('m_salary')) monthlySalaryInput.value = localStorage.getItem('m_salary');
+        if (localStorage.getItem('w_days')) workDaysInput.value = localStorage.getItem('w_days');
+        if (localStorage.getItem('l_mins')) lunchMinutesInput.value = localStorage.getItem('l_mins');
+        if (localStorage.getItem('s_time')) startTimeSelect.value = localStorage.getItem('s_time');
+        if (localStorage.getItem('o_time')) offTimeSelect.value = localStorage.getItem('o_time');
+        if (localStorage.getItem('c_symbol')) currencySelect.value = localStorage.getItem('c_symbol');
+        
+        updateCurrencySymbols();
+
+        // 檢查是否已完成完整基礎設置
+        const salary = parseFloat(monthlySalaryInput.value);
+        const days = parseFloat(workDaysInput.value);
+        const sTime = startTimeSelect.value;
+        const oTime = offTimeSelect.value;
+
+        if (salary > 0 && days > 0 && sTime && oTime) {
+            settingsDetails.removeAttribute('open');
+            startCounting();
+        } else {
+            // 未完成設置前，保持設定選單開啟，且不啟動任何計時與動畫
+            settingsDetails.setAttribute('open', '');
+            statusTitleEl.innerText = '⚙️ 請先完成基本設置';
+        }
+    }
+
+    function saveSettings() {
+        localStorage.setItem('m_salary', monthlySalaryInput.value);
+        localStorage.setItem('w_days', workDaysInput.value);
+        localStorage.setItem('l_mins', lunchMinutesInput.value);
+        localStorage.setItem('s_time', startTimeSelect.value);
+        localStorage.setItem('o_time', offTimeSelect.value);
+        localStorage.setItem('c_symbol', currencySelect.value);
+    }
+
+    function updateCurrencySymbols() {
+        const symbol = currencySelect.value;
+        document.getElementById('currency-symbol').innerText = symbol;
+        document.getElementById('currency-symbol-sub').innerText = symbol;
+    }
+
+    function startCounting() {
+        const salary = parseFloat(monthlySalaryInput.value);
+        const days = parseFloat(workDaysInput.value);
+        const lunch = lunchMinutesInput.value !== '' ? parseFloat(lunchMinutesInput.value) : null;
+        const sTime = startTimeSelect.value;
+        const oTime = offTimeSelect.value;
+
+        if (!salary || salary <= 0) {
+            alert('請先輸入有效的月薪金額！');
+            settingsDetails.setAttribute('open', '');
+            monthlySalaryInput.focus();
+            return;
+        }
+        if (!days || days <= 0) {
+            alert('請先輸入每月工作天數！');
+            settingsDetails.setAttribute('open', '');
+            workDaysInput.focus();
+            return;
+        }
+        if (lunch === null || isNaN(lunch) || lunch < 0) {
+            alert('請輸入午休時間（若無午休請填 0）！');
+            settingsDetails.setAttribute('open', '');
+            lunchMinutesInput.focus();
+            return;
+        }
+        if (!sTime) {
+            alert('請選擇上班時間！');
+            settingsDetails.setAttribute('open', '');
+            startTimeSelect.focus();
+            return;
+        }
+        if (!oTime) {
+            alert('請選擇下班時間！');
+            settingsDetails.setAttribute('open', '');
+            offTimeSelect.focus();
+            return;
+        }
+
+        saveSettings();
+        updateCurrencySymbols();
+        celebrationTriggered = false;
+        
+        settingsDetails.removeAttribute('open');
+
+        updateTimer();
+        if (!timerInterval) {
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+    }
+
+    // 初始化載入設定
+    loadSettings();
+
+    function updateTimer() {
+        const salary = parseFloat(monthlySalaryInput.value) || 0;
+        const workDays = parseFloat(workDaysInput.value) || 0;
+        const sTime = startTimeSelect.value;
+        const oTime = offTimeSelect.value;
+
+        // 若無基礎設置則不執行
+        if (salary <= 0 || workDays <= 0 || !sTime || !oTime) return;
+
+        const currentTime = new Date();
+        const lunchMins = parseFloat(lunchMinutesInput.value) || 0;
+        const symbol = currencySelect.value;
+
+        updateCurrencySymbols();
+
+        const [startHour, startMinute] = sTime.split(':').map(Number);
+        const [targetHour, targetMinute] = oTime.split(':').map(Number);
+
+        let startTime = new Date();
+        startTime.setHours(startHour, startMinute, 0, 0);
+
+        let targetTime = new Date();
+        targetTime.setHours(targetHour, targetMinute, 0, 0);
+
+        const isOvernight = targetTime <= startTime;
+        if (isOvernight) {
+            if (currentTime < startTime && currentTime.getHours() < targetHour) {
+                startTime.setDate(startTime.getDate() - 1);
+            } else {
+                targetTime.setDate(targetTime.getDate() + 1);
+            }
+        }
+
+        const dailySalary = salary / workDays;
+        const totalSpanSeconds = (targetTime - startTime) / 1000;
+        const actualWorkSeconds = Math.max(1, totalSpanSeconds - (lunchMins * 60));
+        const perSecondSalary = actualWorkSeconds > 0 ? (dailySalary / actualWorkSeconds) : 0;
+
+        document.getElementById('per-second').innerText = perSecondSalary.toFixed(4);
+
+        if (currentTime < startTime) {
+            celebrationEl.classList.add('hidden');
+            celebrationEl.classList.remove('flex');
+            celebrationTriggered = false;
+            statusTitleEl.innerText = '⏰ 距離上班還有…';
+            
+            const diffStart = startTime - currentTime;
+            updateDisplayTime(diffStart);
+            
+            document.getElementById('earned-money').innerText = '0.00';
+            document.getElementById('progress-fill').style.width = '0%';
+            document.getElementById('progress-percent').innerText = '0%';
+            return;
+        }
+
+        if (currentTime >= targetTime) {
+            statusTitleEl.innerText = '🎉 今日已下班！';
+            if (!celebrationTriggered) {
+                celebrationEl.classList.remove('hidden');
+                celebrationEl.classList.add('flex');
+                triggerConfetti();
+                celebrationTriggered = true;
+            }
+            document.getElementById('hours').innerText = '00';
+            document.getElementById('minutes').innerText = '00';
+            document.getElementById('seconds').innerText = '00';
+            document.getElementById('progress-fill').style.width = '100%';
+            document.getElementById('progress-percent').innerText = '100%';
+            document.getElementById('earned-money').innerText = dailySalary.toFixed(2);
+            document.getElementById('final-money').innerText = `${symbol}${dailySalary.toFixed(2)}`;
+            return;
+        }
+
+        statusTitleEl.innerText = '🚀 距自由還有…';
+        celebrationEl.classList.add('hidden');
+        celebrationEl.classList.remove('flex');
+        celebrationTriggered = false;
+
+        let elapsedTotalSeconds = (currentTime - startTime) / 1000;
+        let elapsedWorkSeconds = Math.max(0, elapsedTotalSeconds - (lunchMins * 60));
+        if (elapsedTotalSeconds < (lunchMins * 60)) {
+            elapsedWorkSeconds = elapsedTotalSeconds * (actualWorkSeconds / totalSpanSeconds);
+        }
+
+        const currentEarned = Math.min(dailySalary, elapsedWorkSeconds * perSecondSalary);
+        document.getElementById('earned-money').innerText = currentEarned.toFixed(2);
+
+        const diff = targetTime - currentTime;
+        updateDisplayTime(diff);
+
+        let percent = Math.min(100, Math.max(0, Math.floor((elapsedTotalSeconds / totalSpanSeconds) * 100)));
+        document.getElementById('progress-fill').style.width = percent + '%';
+        document.getElementById('progress-percent').innerText = percent + '%';
+    }
+
+    function updateDisplayTime(ms) {
+        const hours = Math.floor(ms / (1000 * 60 * 60));
+        const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+
+        document.getElementById('hours').innerText = String(hours).padStart(2, '0');
+        document.getElementById('minutes').innerText = String(minutes).padStart(2, '0');
+        document.getElementById('seconds').innerText = String(seconds).padStart(2, '0');
+    }
+
+    function dismissCelebration() {
+        celebrationEl.classList.add('hidden');
+        celebrationEl.classList.remove('flex');
+    }
+
+    function triggerConfetti() {
+        if (typeof confetti === 'function') {
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        }
+    }
+</script>
+</body>
+</html>
