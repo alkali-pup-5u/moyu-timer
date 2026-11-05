@@ -38,21 +38,16 @@
 
     <main class="w-full max-w-md glass-card rounded-3xl p-6 sm:p-8 shadow-2xl relative z-10 my-4">
 
-        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-2 text-xs text-slate-400 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700/50">
                 <i data-lucide="calendar" class="w-3.5 h-3.5 text-orange-400"></i>
                 <span id="today-date">載入中...</span>
             </div>
             <div class="flex items-center gap-2">
-                <div class="flex items-center gap-1 text-xs bg-slate-800 text-slate-300 pl-2.5 pr-1 py-1 rounded-full border border-slate-700">
+                <button onclick="toggleLanguage()" class="flex items-center gap-1 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-full border border-slate-700 transition">
                     <i data-lucide="languages" class="w-3.5 h-3.5 text-orange-400"></i>
-                    <select id="lang-select" onchange="setLanguage(this.value)" class="bg-transparent outline-none cursor-pointer text-xs py-0.5">
-                        <option class="bg-slate-900" value="cn">简体·内地</option>
-                        <option class="bg-slate-900" value="zh">繁體·香港</option>
-                        <option class="bg-slate-900" value="tw">繁體·台灣</option>
-                        <option class="bg-slate-900" value="en">English</option>
-                    </select>
-                </div>
+                    <span id="lang-btn-text">English</span>
+                </button>
                 <button onclick="toggleDonateModal(true)" class="flex items-center gap-1.5 text-xs bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-3 py-1.5 rounded-full border border-amber-500/30 transition">
                     <i data-lucide="coffee" class="w-3.5 h-3.5"></i>
                     <span data-i18n="donate">贊助作者</span>
@@ -97,14 +92,15 @@
         <div class="mb-5">
             <div class="flex justify-between text-xs text-slate-400 mb-2 font-medium">
                 <span class="flex items-center gap-1"><i data-lucide="battery-charging" class="w-3.5 h-3.5 text-orange-400"></i> <span data-i18n="progress_title">今日打工進度</span></span>
-                <span id="progress-percent" class="font-mono-num text-orange-400 font-bold">0%</span>
+                <span class="flex items-center gap-2">
+                    <button id="share-icon-btn" onclick="openShare()" class="text-slate-400 hover:text-orange-300 cursor-pointer" aria-label="Share"><i data-lucide="share-2" class="w-3.5 h-3.5"></i></button>
+                    <span id="progress-percent" class="font-mono-num text-orange-400 font-bold">0%</span>
+                </span>
             </div>
             <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden p-0.5 border border-slate-700/50">
                 <div id="progress-fill" class="h-full bg-gradient-to-r from-orange-500 via-amber-400 to-yellow-400 rounded-full transition-all duration-500 ease-out w-0"></div>
             </div>
         </div>
-
-        <button onclick="openShare()" class="w-full mb-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-orange-300 font-bold rounded-xl border border-orange-500/30 transition text-xs flex items-center justify-center gap-2 cursor-pointer"><i data-lucide="share-2" class="w-4 h-4"></i><span data-i18n="share_btn">分享下班進度</span></button>
 
         <div class="bg-slate-800/50 border border-slate-700/40 rounded-xl p-3.5 text-xs text-amber-300/90 flex items-start gap-2.5 mb-5">
             <i data-lucide="quote" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5"></i>
@@ -487,9 +483,34 @@
     const donateModalEl = document.getElementById('donate-modal');
     const settingsDetails = document.getElementById('settings-details');
 
-    const _sl = localStorage.getItem('app_lang'), _nl = (navigator.language || '').toLowerCase();
-    let currentLang = ['zh', 'cn', 'tw', 'en'].includes(_sl) ? _sl
-        : _nl.startsWith('zh') ? (_nl.includes('hk') || _nl.includes('mo') ? 'zh' : (_nl.includes('tw') || _nl.includes('hant') ? 'tw' : 'cn')) : 'en';
+    // 只開放「中文 / English」二選一；中文的字體版本（簡體/繁體）由 IP 所在地自動決定：
+    // 中國內地 → 簡體(cn)、台灣 → 繁體台灣(tw)、香港/澳門 → 繁體香港(zh)
+    const REGION_VARIANT = { CN: 'cn', TW: 'tw', HK: 'zh', MO: 'zh' };
+    const VALID_VARIANT = ['cn', 'tw', 'zh'];
+
+    // 本地推測（IP 查詢失敗或尚未完成時使用）：時區 → 瀏覽器語言
+    function guessLocal() {
+        let tz = '';
+        try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+        if (/^Asia\/(Shanghai|Chongqing|Harbin|Urumqi|Kashgar)$/.test(tz)) return 'cn';
+        if (tz === 'Asia/Taipei') return 'tw';
+        if (tz === 'Asia/Hong_Kong' || tz === 'Asia/Macau') return 'zh';
+        const nl = (navigator.language || '').toLowerCase();
+        if (nl.startsWith('zh')) {
+            if (nl.includes('hk') || nl.includes('mo')) return 'zh';
+            if (nl.includes('tw') || nl.includes('hant')) return 'tw';
+            return 'cn';
+        }
+        return null;
+    }
+
+    const _cachedVariant = localStorage.getItem('zh_variant');
+    const _localGuess = guessLocal();
+    let zhVariant = VALID_VARIANT.includes(_cachedVariant) ? _cachedVariant : (_localGuess || 'cn');
+    const _savedMode = localStorage.getItem('app_mode');
+    let currentLang = _savedMode === 'en' ? 'en'
+        : _savedMode === 'zh' ? zhVariant
+        : (_localGuess ? zhVariant : 'en');
     let statusKey = 'status_init';
     let celebrationTriggered = false;
     let timerInterval = null;
@@ -502,9 +523,9 @@
 
     function setLanguage(lang) {
         currentLang = lang;
-        localStorage.setItem('app_lang', lang);
+        localStorage.setItem('app_mode', lang === 'en' ? 'en' : 'zh');
 
-        document.getElementById('lang-select').value = lang;
+        document.getElementById('lang-btn-text').innerText = (lang === 'en') ? '中文' : 'English';
         document.documentElement.setAttribute('lang', { zh: 'zh-HK', cn: 'zh-Hans', tw: 'zh-TW', en: 'en' }[lang]);
 
         document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -526,6 +547,37 @@
     }
 
 
+    function toggleLanguage() {
+        setLanguage(currentLang === 'en' ? zhVariant : 'en');
+    }
+
+    // 以 IP 判斷所在地（多個服務輪流嘗試，3 秒逾時），只用來決定簡/繁版本
+    async function detectRegion() {
+        const sources = [
+            ['https://api.country.is/', d => d.country],
+            ['https://ipwho.is/', d => d.country_code],
+            ['https://ipapi.co/json/', d => d.country_code]
+        ];
+        for (const [url, getCode] of sources) {
+            try {
+                const ctrl = new AbortController();
+                const timer = setTimeout(() => ctrl.abort(), 3000);
+                const res = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
+                clearTimeout(timer);
+                if (!res.ok) continue;
+                const code = String(getCode(await res.json()) || '').toUpperCase();
+                if (!code) continue;
+                const v = REGION_VARIANT[code];
+                if (v) {
+                    localStorage.setItem('zh_variant', v);
+                    zhVariant = v;
+                    if (currentLang !== 'en' && currentLang !== v) setLanguage(v);
+                }
+                return;
+            } catch (e) { /* 換下一個服務 */ }
+        }
+    }
+
     function updateQuote() {
         const quotes = i18nData[currentLang].quotes;
         quoteTextEl.innerText = quotes[Math.floor(Math.random() * quotes.length)];
@@ -533,7 +585,7 @@
 
     function updateDate() {
         const d = new Date();
-        todayDateEl.innerText = currentLang === 'en' ? d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+        todayDateEl.innerText = currentLang === 'en' ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
     }
 
     // ---------- 介面 ----------
@@ -1465,6 +1517,7 @@
     updateDate();
     setLanguage(currentLang);
     loadSettings();
+    detectRegion();
 </script>
 </body>
 </html>
