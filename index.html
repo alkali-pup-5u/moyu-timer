@@ -38,16 +38,21 @@
 
     <main class="w-full max-w-md glass-card rounded-3xl p-6 sm:p-8 shadow-2xl relative z-10 my-4">
 
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
             <div class="flex items-center gap-2 text-xs text-slate-400 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700/50">
                 <i data-lucide="calendar" class="w-3.5 h-3.5 text-orange-400"></i>
                 <span id="today-date">載入中...</span>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="toggleLanguage()" class="flex items-center gap-1 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-full border border-slate-700 transition">
+                <div class="flex items-center gap-1 text-xs bg-slate-800 text-slate-300 pl-2.5 pr-1 py-1 rounded-full border border-slate-700">
                     <i data-lucide="languages" class="w-3.5 h-3.5 text-orange-400"></i>
-                    <span id="lang-btn-text">简体</span>
-                </button>
+                    <select id="lang-select" onchange="setLanguage(this.value)" class="bg-transparent outline-none cursor-pointer text-xs py-0.5">
+                        <option class="bg-slate-900" value="cn">简体·内地</option>
+                        <option class="bg-slate-900" value="zh">繁體·香港</option>
+                        <option class="bg-slate-900" value="tw">繁體·台灣</option>
+                        <option class="bg-slate-900" value="en">English</option>
+                    </select>
+                </div>
                 <button onclick="toggleDonateModal(true)" class="flex items-center gap-1.5 text-xs bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-3 py-1.5 rounded-full border border-amber-500/30 transition">
                     <i data-lucide="coffee" class="w-3.5 h-3.5"></i>
                     <span data-i18n="donate">贊助作者</span>
@@ -99,6 +104,8 @@
             </div>
         </div>
 
+        <button onclick="openShare()" class="w-full mb-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-orange-300 font-bold rounded-xl border border-orange-500/30 transition text-xs flex items-center justify-center gap-2 cursor-pointer"><i data-lucide="share-2" class="w-4 h-4"></i><span data-i18n="share_btn">分享下班進度</span></button>
+
         <div class="bg-slate-800/50 border border-slate-700/40 rounded-xl p-3.5 text-xs text-amber-300/90 flex items-start gap-2.5 mb-5">
             <i data-lucide="quote" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5"></i>
             <span id="quote-text" class="leading-relaxed">載入中...</span>
@@ -122,6 +129,8 @@
                             <option value="¥" data-i18n="cur_rmb">人民幣 RMB (¥)</option>
                             <option value="HKD " data-i18n="cur_hkd">港幣 HKD (HK$)</option>
                             <option value="NT$ " data-i18n="cur_twd">新台幣 TWD (NT$)</option>
+                            <option value="€" data-i18n="cur_eur">歐元 EUR (€)</option>
+                            <option value="£" data-i18n="cur_gbp">英鎊 GBP (£)</option>
                         </select>
                     </div>
                     <div>
@@ -187,7 +196,7 @@
 
         <div class="text-xs text-slate-500 mt-4 mb-2 text-center" data-i18n="busy_btn">🕶️ 假裝很忙</div>
         <div class="grid grid-cols-2 gap-2">
-            <button onclick="openBusy('update')" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl border border-slate-700 transition text-xs cursor-pointer">🪟 Windows Update</button>
+            <button onclick="openBusy('update')" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl border border-slate-700 transition text-xs cursor-pointer">🪟 Windows BSOD</button>
             <button onclick="openBusy('mail')" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl border border-slate-700 transition text-xs cursor-pointer">📧 Outlook</button>
             <button onclick="openBusy('excel')" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl border border-slate-700 transition text-xs cursor-pointer">📊 Excel</button>
             <button onclick="openBusy('code')" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl border border-slate-700 transition text-xs cursor-pointer">💻 Terminal</button>
@@ -217,10 +226,26 @@
         </div>
     </div>
 
+    <!-- 分享圖片 -->
+    <div id="share-modal" onclick="toggleShare(false)" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex-col items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-slate-900 border border-slate-700/80 rounded-3xl p-4 max-w-xs w-full shadow-2xl text-center max-h-[95vh] overflow-y-auto">
+            <img id="share-img" alt="" class="w-full rounded-2xl mb-3 bg-slate-800 min-h-[200px]">
+            <label class="flex items-center justify-center gap-2 text-xs text-slate-400 mb-3 cursor-pointer select-none">
+                <input type="checkbox" id="share-money" class="accent-orange-500" onchange="drawShare()"><span data-i18n="share_money">圖片顯示今日已賺金額</span>
+            </label>
+            <div class="grid grid-cols-3 gap-2 text-xs font-bold">
+                <button onclick="shareImage()" class="py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white" data-i18n="share_send">分享</button>
+                <button id="sh-copy" onclick="copyImage()" class="py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-200" data-i18n="share_copy">複製</button>
+                <button onclick="saveImage()" class="py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-200" data-i18n="share_save">儲存</button>
+            </div>
+            <p class="text-[10px] text-slate-500 mt-3" data-i18n="share_tip">微信內：長按圖片即可轉發或儲存</p>
+        </div>
+    </div>
+
     <!-- 假裝很忙 -->
-    <div id="busy-overlay" onclick="closeBusy()" class="fixed inset-0 z-[70] hidden flex-col bg-black">
+    <div id="busy-overlay" onclick="busyOverlayClick()" class="fixed inset-0 z-[70] hidden flex-col bg-black">
         <div id="busy-stage" class="w-full h-full"></div>
-        <div class="fixed bottom-1 right-2 text-[10px] text-slate-400/30" data-i18n="busy_exit">按 Esc 或點擊任意處返回</div>
+        <div onclick="event.stopPropagation();closeBusy()" class="fixed bottom-0 right-0 p-2 text-[10px] text-slate-400/30 cursor-pointer" data-i18n="busy_exit">按 Esc 或點此返回</div>
     </div>
 
     <!-- 下班發射倒數 -->
@@ -258,7 +283,7 @@
             donate: "贊助作者",
             busy_btn: "🕶️ 假裝很忙",
             busy_title: "系統處理中，請勿關閉視窗…",
-            busy_exit: "按 Esc 或點擊任意處返回",
+            busy_exit: "按 Esc 或點此返回",
             busy_tasks: ["正在對齊顆粒度", "正在賦能底層邏輯", "正在打通業務閉環", "正在沉澱方法論", "正在拉齊各方認知"],
             rocket_title: "🔥 下班發射倒數",
             rocket_hint: "點擊任意處關閉",
@@ -293,7 +318,8 @@
             label_start: "上班時間",
             label_off: "下班時間",
             label_weekend: "週末休息（不計薪）",
-            cur_usd: "美金 USD ($)", cur_rmb: "人民幣 RMB (¥)", cur_hkd: "港幣 HKD (HK$)", cur_twd: "新台幣 TWD (NT$)",
+            cur_usd: "美金 USD ($)", cur_rmb: "人民幣 RMB (¥)", cur_hkd: "港幣 HKD (HK$)", cur_twd: "新台幣 TWD (NT$)", cur_eur: "歐元 EUR (€)", cur_gbp: "英鎊 GBP (£)",
+            share_btn: "分享下班進度", share_money: "圖片顯示今日已賺金額", share_send: "分享", share_copy: "複製", share_save: "儲存", share_tip: "微信內：長按圖片即可轉發或儲存", share_foot: "你幾時放工？一齊摸魚 🐟",
             ph_salary: "例如: 25000", ph_days: "例如: 22", ph_daily: "例如: 1200", ph_lunch: "例如: 60",
             btn_start: "保存設定並開始摸魚計時！",
             donate_title: "☕ 請作者喝杯咖啡",
@@ -327,7 +353,7 @@
             donate: "赞助作者",
             busy_btn: "🕶️ 假装很忙",
             busy_title: "系统处理中，请勿关闭窗口…",
-            busy_exit: "按 Esc 或点击任意处返回",
+            busy_exit: "按 Esc 或点此返回",
             busy_tasks: ["正在对齐颗粒度", "正在赋能底层逻辑", "正在打通业务闭环", "正在沉淀方法论", "正在拉齐各方认知"],
             rocket_title: "🔥 下班发射倒数",
             rocket_hint: "点击任意处关闭",
@@ -362,7 +388,8 @@
             label_start: "上班时间",
             label_off: "下班时间",
             label_weekend: "周末休息（不计薪）",
-            cur_usd: "美金 USD ($)", cur_rmb: "人民币 RMB (¥)", cur_hkd: "港币 HKD (HK$)", cur_twd: "新台币 TWD (NT$)",
+            cur_usd: "美金 USD ($)", cur_rmb: "人民币 RMB (¥)", cur_hkd: "港币 HKD (HK$)", cur_twd: "新台币 TWD (NT$)", cur_eur: "欧元 EUR (€)", cur_gbp: "英镑 GBP (£)",
+            share_btn: "分享下班进度", share_money: "图片显示今日已赚金额", share_send: "分享", share_copy: "复制", share_save: "保存", share_tip: "微信内：长按图片即可转发或保存", share_foot: "你几点下班？一起摸鱼 🐟",
             ph_salary: "例如: 25000", ph_days: "例如: 22", ph_daily: "例如: 1200", ph_lunch: "例如: 60",
             btn_start: "保存设定并开始摸鱼计时！",
             donate_title: "☕ 请作者喝杯咖啡",
@@ -393,6 +420,53 @@
         }
     };
 
+    i18nData.tw = { ...i18nData.zh, title: "快樂摸魚🐟一起摸魚趣", share_foot: "你幾點下班？一起摸魚 🐟", per_second: "每秒入帳" };
+    i18nData.en = {
+        title: "Happy Slacking 🐟 Clock-Out Countdown", donate: "Tip the Dev",
+        busy_btn: "🕶️ Look Busy", busy_title: "Processing, please don't close…", busy_exit: "Press Esc or click here to exit",
+        busy_tasks: ["Aligning granularity", "Empowering core logic", "Closing the loop", "Distilling methodology", "Syncing stakeholders"],
+        rocket_title: "🔥 Clock-Out Launch Countdown", rocket_hint: "Click anywhere to close",
+        moods: [
+            [10, "☕ Soul not booted yet – running on muscle memory."],
+            [30, "💻 Pretending to focus, actually thinking about lunch."],
+            [50, "🍱 Lunch is calling. Focus down 50%."],
+            [70, "😴 Post-lunch slump. Eyelids have a mind of their own."],
+            [85, "⏳ The longest hour in the world."],
+            [95, "🏃 Every muscle is in evacuation mode."],
+            [101, "🚪 Your soul already walked out the door."]
+        ],
+        status_init: "⚙️ Finish setup first", status_before: "⏰ Until work starts…", status_off: "🎉 You're off the clock!",
+        status_working: "🚀 Until freedom…", status_rest: "😴 Day off today",
+        hours: "Hours", minutes: "Min", seconds: "Sec",
+        earned_title: "Earned today", per_second: "Per second", progress_title: "Workday progress",
+        settings_title: "⚙️ Pay & schedule settings", label_currency: "Currency", label_calc_type: "Pay basis",
+        type_monthly: "Monthly salary", type_daily: "Daily rate", label_salary: "Monthly salary", label_daily_salary: "Daily rate",
+        label_days: "Workdays per month", label_lunch: "Lunch break (min)", label_lunch_start: "Lunch starts",
+        label_start: "Work starts", label_off: "Work ends", label_weekend: "Weekends off (unpaid)",
+        cur_usd: "US Dollar USD ($)", cur_rmb: "Chinese Yuan CNY (¥)", cur_hkd: "HK Dollar HKD (HK$)", cur_twd: "Taiwan Dollar TWD (NT$)", cur_eur: "Euro EUR (€)", cur_gbp: "British Pound GBP (£)",
+        ph_salary: "e.g. 5000", ph_days: "e.g. 21", ph_daily: "e.g. 200", ph_lunch: "e.g. 60",
+        btn_start: "Save & start the countdown!",
+        donate_title: "☕ Buy the dev a coffee", donate_desc: "Find it useful? Scan to support!",
+        tab_wechat: "WeChat Pay", tab_alipay: "Alipay", donate_footer: "Thanks for making slacking more motivating!",
+        celeb_title: "Time to go home!", celeb_desc: "Great work! Today's pay is safely in your pocket! 💰",
+        celeb_pocket: "Earned today", celeb_footer: "Pack up and make your escape! 🏃‍♂️💨", celeb_btn: "Got it, time to enjoy life! ✨",
+        select_hint: "Select…",
+        alert_salary: "Please enter a valid monthly salary.", alert_daily_salary: "Please enter a valid daily rate.",
+        alert_days: "Please enter the workdays per month.", alert_lunch: "Please enter lunch minutes (0 if none).",
+        alert_start: "Please select a start time.", alert_off: "Please select an end time.",
+        quotes: [
+            "No matter how tiring work gets, never forget to slack off!",
+            "Working hard earns a paycheck; slacking earns it from the boss.",
+            "Watching the wallet grow makes overtime feel better (not really).",
+            "Hang in there, you're almost out the door!",
+            "Do today's work today. Can't finish? Slack again tomorrow.",
+            "The air after work is sweeter than any other.",
+            "Every second you're funding your dreams (or your takeout)!"
+        ],
+        share_btn: "Share my progress", share_money: "Show today's earnings on the image", share_send: "Share", share_copy: "Copy", share_save: "Save",
+        share_tip: "In WeChat: long-press the image to forward or save", share_foot: "When do you clock out? 🐟"
+    };
+
     // ---------- 元素 ----------
     const calcTypeSelect = document.getElementById('calc-type');
     const monthlyFields = document.getElementById('monthly-fields');
@@ -413,7 +487,9 @@
     const donateModalEl = document.getElementById('donate-modal');
     const settingsDetails = document.getElementById('settings-details');
 
-    let currentLang = localStorage.getItem('app_lang') || 'zh';
+    const _sl = localStorage.getItem('app_lang'), _nl = (navigator.language || '').toLowerCase();
+    let currentLang = ['zh', 'cn', 'tw', 'en'].includes(_sl) ? _sl
+        : _nl.startsWith('zh') ? (_nl.includes('hk') || _nl.includes('mo') ? 'zh' : (_nl.includes('tw') || _nl.includes('hant') ? 'tw' : 'cn')) : 'en';
     let statusKey = 'status_init';
     let celebrationTriggered = false;
     let timerInterval = null;
@@ -428,8 +504,8 @@
         currentLang = lang;
         localStorage.setItem('app_lang', lang);
 
-        document.getElementById('lang-btn-text').innerText = (lang === 'zh') ? '简体' : '繁體';
-        document.documentElement.setAttribute('lang', lang === 'zh' ? 'zh-Hant' : 'zh-Hans');
+        document.getElementById('lang-select').value = lang;
+        document.documentElement.setAttribute('lang', { zh: 'zh-HK', cn: 'zh-Hans', tw: 'zh-TW', en: 'en' }[lang]);
 
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const text = i18nData[currentLang][el.getAttribute('data-i18n')];
@@ -443,14 +519,12 @@
         document.getElementById('page-title').innerText = i18nData[currentLang].title;
         document.title = i18nData[currentLang].title;
         updateTimeOptions();
+        updateDate();
         setStatus(statusKey);
         updateQuote();
         lastMoodIdx = -1;
     }
 
-    function toggleLanguage() {
-        setLanguage(currentLang === 'zh' ? 'cn' : 'zh');
-    }
 
     function updateQuote() {
         const quotes = i18nData[currentLang].quotes;
@@ -459,7 +533,7 @@
 
     function updateDate() {
         const d = new Date();
-        todayDateEl.innerText = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+        todayDateEl.innerText = currentLang === 'en' ? d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
     }
 
     // ---------- 介面 ----------
@@ -479,7 +553,7 @@
                     const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
                     const opt = document.createElement('option');
                     opt.value = timeStr;
-                    opt.textContent = timeStr;
+                    opt.textContent = currentLang === 'en' ? `${h % 12 || 12}:${pad(m)} ${h < 12 ? 'AM' : 'PM'}` : timeStr;
                     select.appendChild(opt);
                 }
             }
@@ -822,132 +896,404 @@
     // ---------- 假裝很忙（擬真場景） ----------
     const busyEl = document.getElementById('busy-overlay');
     let busyTimers = [];
+    let busyKeyHandler = null;
+    let busyInteractive = false;
     const rnd = n => Math.floor(Math.random() * n);
-    const tr = (zh, cn) => currentLang === 'zh' ? zh : cn;
+    const pick = arr => arr[rnd(arr.length)];
+    const tr = (zh, cn, en, tw) => ({ zh, cn, en: en ?? zh, tw: tw ?? zh })[currentLang];
+    const T = p => tr(p[0], p[1]);
+    const shuffle = arr => arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
 
     function busyClear() {
+        hintStop();
         busyTimers.forEach(t => { clearInterval(t); clearTimeout(t); });
         busyTimers = [];
+        busyKeyHandler = null;
+        busyInteractive = false;
     }
     function busyEvery(fn, ms) { busyTimers.push(setInterval(fn, ms)); }
 
-    // 場景一：Windows Update
+    // 場景一：Windows 藍屏當機（BSOD → 黑屏 → 更新中 → 再當機）
+    const BSOD_CODES = ['CRITICAL_PROCESS_DIED', 'SYSTEM_SERVICE_EXCEPTION', 'IRQL_NOT_LESS_OR_EQUAL', 'PAGE_FAULT_IN_NONPAGED_AREA', 'KERNEL_SECURITY_CHECK_FAILURE', 'MEMORY_MANAGEMENT'];
     function sceneUpdate(stage) {
-        stage.className = 'w-full h-full flex flex-col items-center justify-center text-white select-none cursor-none';
-        stage.style.background = '#0063b1';
-        stage.innerHTML = `
-            <div class="w-12 h-12 border-4 border-white/90 border-t-transparent rounded-full animate-spin mb-8"></div>
-            <div id="upd-text" class="text-2xl mb-3"></div>
-            <div class="text-lg opacity-90">${tr('請不要關閉電腦。', '请不要关闭计算机。')}</div>
-            <div class="text-lg opacity-90 text-center px-6">${tr('您的電腦將會重新啟動數次。這可能需要一些時間。', '你的电脑将会重启几次。这可能需要一些时间。')}</div>`;
-        let p = rnd(20) + 5;
-        const render = () => {
-            document.getElementById('upd-text').innerText = tr(`正在處理更新 ${p}% 完成`, `正在处理更新 ${p}% 完成`);
+        stage.className = 'w-full h-full text-white select-none cursor-none';
+        stage.style.fontFamily = "'Segoe UI', 'Microsoft YaHei', 'Noto Sans TC', sans-serif";
+        const show = (bg, html) => { stage.style.background = bg; stage.innerHTML = html; };
+        const UT = [p => tr(`正在處理更新 ${p}% 完成`, `正在处理更新 ${p}% 完成`, `Working on updates ${p}% complete`),
+            p => tr(`正在安裝更新 ${p}%`, `正在安装更新 ${p}%`, `Installing updates ${p}%`),
+            p => tr(`正在準備 Windows ${p}%`, `正在准备 Windows ${p}%`, `Getting Windows ready ${p}%`),
+            p => tr(`正在設定更新 ${p}%`, `正在配置更新 ${p}%`, `Configuring updates ${p}%`)];
+        const ut = pick(UT);
+        const MSGS = [['正在重新啟動', '正在重新启动', 'Restarting'], ['正在準備自動修復', '正在准备自动修复', 'Preparing Automatic Repair'],
+            ['正在診斷你的電腦', '正在诊断你的电脑', 'Diagnosing your PC'], ['正在關機', '正在关机', 'Shutting down'], ['正在登出', '正在注销', 'Signing out']];
+        const crash = () => {
+            const code = pick(BSOD_CODES);
+            let qr = '';
+            for (let i = 0; i < 121; i++) qr += `<i style="background:${Math.random() < 0.5 ? '#0078d7' : '#fff'}"></i>`;
+            show('#0078d7', `<div class="h-full flex flex-col justify-center px-[8%] sm:px-[14%] gap-3 sm:gap-4">
+                <div class="text-7xl sm:text-9xl leading-none">:(</div>
+                <div class="text-lg sm:text-2xl leading-snug">${tr('你的電腦發生問題，需要重新啟動。我們只是在收集一些錯誤資訊，然後便會為你重新啟動。', '你的电脑遇到问题，需要重新启动。我们只收集某些错误信息，然后为你重新启动。', "Your PC ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.", '您的電腦發生問題，必須重新啟動。我們只收集某些錯誤資訊，然後為您重新啟動。')}</div>
+                <div class="text-lg sm:text-2xl"><span id="bs-p">0</span>% ${tr('完成', '完成', 'complete')}</div>
+                <div class="flex gap-4 items-center mt-2">
+                    <div style="display:grid;grid-template-columns:repeat(11,1fr);width:6.5rem;height:6.5rem;background:#fff;padding:4px;flex-shrink:0">${qr}</div>
+                    <div class="text-[11px] sm:text-sm leading-snug">${tr('如需此問題的詳細資訊和可能的解決方法，請瀏覽 https://www.windows.com/stopcode', '如需有关此问题的详细信息和可能的解决方法，请访问 https://www.windows.com/stopcode', 'For more information about this issue and possible fixes, visit https://www.windows.com/stopcode', '如需這個問題和可能的修正的詳細資訊，請造訪 https://www.windows.com/stopcode')}<br><br>${tr('如果你致電支援人員，請提供以下資訊：', '如果致电支持人员，请向他们提供以下信息：', 'If you call a support person, give them this info:', '如果您打電話給支援人員，請提供以下資訊：')}<br>${tr('停止代碼', '终止代码', 'Stop code')}: ${code}</div>
+                </div></div>`);
+            let p = 0;
+            const iv = setInterval(() => {
+                p = Math.min(100, p + 1 + rnd(9));
+                const el = document.getElementById('bs-p'); if (el) el.textContent = p;
+                if (p >= 100) { clearInterval(iv); busyTimers.push(setTimeout(dark, 1200)); }
+            }, 600);
+            busyTimers.push(iv);
         };
-        render();
-        busyEvery(() => { if (Math.random() < 0.5 && p < 99) { p++; render(); } }, 2500);
+        const dark = () => { show('#000', ''); busyTimers.push(setTimeout(next, 1500 + rnd(2500))); };
+        const upd = () => {
+            let p = rnd(30);
+            show(pick(['#0063b1', '#1b1b1b', '#0078d7']), `<div class="h-full flex flex-col items-center justify-center text-center px-6">
+                <div class="w-12 h-12 border-4 border-white/90 border-t-transparent rounded-full animate-spin mb-8"></div>
+                <div id="upd-text" class="text-2xl mb-3">${ut(p)}</div>
+                <div class="text-lg opacity-90">${tr('請不要關閉電腦。', '请不要关闭计算机。', "Don't turn off your PC.")}</div></div>`);
+            const iv = setInterval(() => { p = Math.min(99, p + 1 + rnd(4)); const el = document.getElementById('upd-text'); if (el) el.innerText = ut(p); }, 800);
+            busyTimers.push(iv, setTimeout(() => { clearInterval(iv); next(); }, 5000 + rnd(7000)));
+        };
+        const msg = () => {
+            const m = pick(MSGS);
+            show(pick(['#0063b1', '#1b1b1b', '#000']), `<div class="h-full flex flex-col items-center justify-center text-center px-6">
+                <div class="w-12 h-12 border-4 border-white/90 border-t-transparent rounded-full animate-spin mb-8"></div>
+                <div class="text-2xl mb-3">${tr(m[0], m[1], m[2])}</div>
+                <div class="text-lg opacity-90">${tr('請不要關閉電腦。', '请不要关闭计算机。', "Don't turn off your PC.")}</div></div>`);
+            busyTimers.push(setTimeout(next, 3500 + rnd(4000)));
+        };
+        const next = () => pick([crash, crash, upd, upd, msg, dark])();
+        next();
     }
 
-    // 場景二：Outlook 發郵件（逐字打出，寄出後換下一封）
-    function getMails() {
-        return currentLang === 'zh' ? [
-            { to: 'marketing-team@company.com', subj: 'RE: 本週專案進度同步',
-              body: '各位同事好，\n\n針對本週專案進度，目前已完成約 80%，剩餘項目預計於週五前對齊完畢。如有任何問題，歡迎隨時與我聯繫。\n\n謝謝。' },
-            { to: 'finance@company.com', subj: 'FW: 第三季費用報表確認',
-              body: 'Hi，\n\n附件為第三季費用報表，請協助確認數字是否正確。若無問題，麻煩於明天下班前回覆，謝謝！' },
-            { to: 'manager@company.com', subj: '週報：本週工作重點與下週計畫',
-              body: '經理好，\n\n本週重點：\n1. 完成需求文件初稿\n2. 與相關部門對齊時程\n\n下週計畫：持續跟進並更新進度。\n\n謝謝。' }
-        ] : [
-            { to: 'marketing-team@company.com', subj: 'RE: 本周项目进度同步',
-              body: '各位同事好，\n\n针对本周项目进度，目前已完成约 80%，剩余项目预计于周五前对齐完毕。如有任何问题，欢迎随时与我联系。\n\n谢谢。' },
-            { to: 'finance@company.com', subj: 'FW: 第三季度费用报表确认',
-              body: 'Hi，\n\n附件为第三季度费用报表，请协助确认数字是否正确。若无问题，麻烦于明天下班前回复，谢谢！' },
-            { to: 'manager@company.com', subj: '周报：本周工作重点与下周计划',
-              body: '经理好，\n\n本周重点：\n1. 完成需求文档初稿\n2. 与相关部门对齐时间表\n\n下周计划：持续跟进并更新进度。\n\n谢谢。' }
-        ];
+    // 場景二：Outlook（用你的鍵盤打字才會出字，每封信隨機組合）
+    const ML = {
+        cn: { ui: '收件箱|已发送|草稿|已删除邮件|收件人|主题|发送|发送中…|你的邮件已发送|新邮件', dom: '.com.cn',
+            topics: '本周项目进度同步|第三季度费用报表确认|会议纪要与待办事项|客户需求变更确认|新版本上线时间表|预算调整申请|周报：本周重点与下周计划|设备采购流程确认',
+            greet: '各位同事好，|Hi，|您好，|各位领导、同事：',
+            mids: '目前进度约完成 {n}%，剩余事项预计本周五前拉齐。|附件为最新版本，请查收并确认。|相关材料已同步至共享文件夹，请知悉。|我们计划于下周三前完成第一轮评审。|烦请于明天下班前反馈，以便后续排期。|如有疑问，请随时联系我（微信同号）。',
+            close: '谢谢！|麻烦了，谢谢！|辛苦各位了！|祝好！', names: '王伟|李娜|张磊|刘洋',
+            sig: n => `${n}\n手机：1${3 + rnd(6)}${digits(9)}` },
+        zh: { ui: '收件箱|已傳送郵件|草稿|已刪除郵件|收件人|主旨|傳送|傳送中…|郵件已傳送|新郵件', dom: '.com.hk',
+            topics: 'Weekly Project Update|Q3 費用報表確認|Meeting Minutes 及跟進事項|客戶需求更改確認|New Release Timeline|Budget 調整申請|Weekly Report：本週重點及下週計劃|Equipment Purchase 流程確認',
+            greet: 'Dear all,|Hi team,|Hi all,',
+            mids: '目前進度大約完成 {n}%，其餘項目預計星期五前跟進完成。|Please find attached the latest version，麻煩大家確認內容。|相關資料已放在 shared folder，請參閱。|我們預計下星期三前完成第一輪 review。|煩請於明天下班前回覆，方便安排跟進。|如有任何查詢，歡迎隨時聯絡我。',
+            close: 'Thanks & regards,|Best regards,|Thank you.', names: 'Winnie|Kelvin|Ivy|Jason',
+            sig: n => `${n}\nTel: (852) ${pick(['2', '3', '5', '6', '9'])}${digits(3)} ${digits(4)}` },
+        tw: { ui: '收件匣|寄件備份|草稿|刪除的郵件|收件者|主旨|傳送|傳送中…|您的郵件已傳送|新郵件', dom: '.com.tw',
+            topics: '本週專案進度同步|第三季費用報表確認|會議紀錄與待辦事項|客戶需求變更確認|新版本上線時程|預算調整申請|週報：本週重點與下週計畫|設備採購流程確認',
+            greet: '各位同仁好，|Dear all,|您好，',
+            mids: '目前進度約完成 {n}%，剩餘項目預計本週五前對齊。|附件為最新版本，敬請協助確認內容是否正確。|相關細節已整理於共用資料夾，請參考。|預計於下週三前完成第一輪檢視。|麻煩於明天下班前回覆，以利後續排程。|如有任何問題，歡迎隨時與我聯繫。',
+            close: '謝謝。|麻煩了，謝謝！|感謝您的協助。|Best regards,', names: '陳志明|林雅婷|黃建宏|張怡君',
+            sig: n => `${n}\nTEL: 02-${digits(4)}-${digits(4)} #${100 + rnd(900)}` },
+        en: { ui: 'Inbox|Sent Items|Drafts|Deleted Items|To|Subject|Send|Sending…|Your message has been sent|New mail', dom: '.com',
+            topics: 'Weekly project status update|Q3 expense report for review|Meeting notes and action items|Client requirements change|New release timeline|Budget adjustment request|Weekly recap: highlights and next steps|Equipment procurement process',
+            greet: 'Hi team,|Hello all,|Hi everyone,',
+            mids: 'We are about {n}% complete, with the remaining items on track to wrap up by Friday.|Please find the latest version attached – let me know if anything looks off.|I have put all the details in the shared folder for reference.|We aim to finish the first round of review by next Wednesday.|Could you reply by end of day tomorrow so we can plan next steps?|Feel free to reach out if you have any questions.',
+            close: 'Thanks,|Best regards,|Many thanks,|Cheers,', names: 'John Smith|Emily Davis|Michael Brown|Sarah Wilson',
+            sig: n => `${n}\n${pick(['Senior Analyst', 'Project Manager', 'Operations Lead'])}\nP: (555) ${digits(3)}-${digits(4)}` }
+    };
+    Object.values(ML).forEach(m => { m.ui = m.ui.split('|'); ['topics', 'greet', 'mids', 'close', 'names'].forEach(k => m[k] = m[k].split('|')); });
+
+    const ML2 = {
+        cn: { files: '第三季度报表.xlsx|会议纪要.docx|方案_v2.pptx|预算表.xlsx', q: '原始邮件|发件人|主题', inv: '会议邀请|时间|地点', rooms: '3号会议室|腾讯会议|飞书会议|钉钉会议' },
+        zh: { files: 'Q3_Report.xlsx|Meeting_Minutes.docx|Proposal_v2.pptx|Budget_2026.xlsx', q: 'Original Message|From|Subject', inv: 'Meeting Invitation|Time|Venue', rooms: 'Meeting Room 3|Zoom|Microsoft Teams|會議室 B' },
+        tw: { files: '第三季報表.xlsx|會議紀錄.docx|提案_v2.pptx|預算表.xlsx', q: '原始郵件|寄件者|主旨', inv: '會議邀請|時間|地點', rooms: '3 號會議室|Microsoft Teams|Google Meet|大會議室' },
+        en: { files: 'Q3_Report.xlsx|Meeting_Notes.docx|Proposal_v2.pptx|Budget_2026.xlsx', q: 'Original Message|From|Subject', inv: 'Meeting invitation|When|Where', rooms: 'Conference Room B|Microsoft Teams|Zoom|Room 402' }
+    };
+    Object.keys(ML2).forEach(k => { const m = ML2[k]; ['files', 'q', 'inv', 'rooms'].forEach(f => ML[k][f] = m[f].split('|')); });
+
+    function makeMail() {
+        const M = ML[currentLang], n = 40 + rnd(55), en = currentLang === 'en';
+        const topic = pick(M.topics), kind = pick(['new', 'new', 'reply', 'invite']);
+        const sign = `${pick(M.close)}\n${M.sig(pick(M.names))}`;
+        let subj, body;
+        if (kind === 'invite') {
+            const d = new Date(Date.now() + (1 + rnd(7)) * 864e5), h = 9 + rnd(8), mi = pick([0, 30]);
+            const day = en ? d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : `${d.getMonth() + 1}月${d.getDate()}日`;
+            const tm = en ? `${h % 12 || 12}:${pad(mi)} ${h < 12 ? 'AM' : 'PM'}` : `${pad(h)}:${pad(mi)}`;
+            subj = M.inv[0] + ': ' + topic;
+            body = `${pick(M.greet)}\n\n${M.inv[1]}: ${day} ${tm}\n${M.inv[2]}: ${pick(M.rooms)}\n\n${sign}`;
+        } else {
+            const mids = shuffle(M.mids).slice(0, 2 + rnd(2)).map(x => x.replace('{n}', n)).join(en ? ' ' : '');
+            subj = (kind === 'reply' ? 'RE: ' : pick(['', '', 'FW: '])) + topic;
+            body = `${pick(M.greet)}\n\n${mids}\n\n${sign}`;
+            if (kind === 'reply') body += `\n\n-----${M.q[0]}-----\n${M.q[1]}: ${pick(M.names)}\n${M.q[2]}: ${topic}`;
+        }
+        return {
+            to: pick(['marketing-team', 'finance', 'hr', 'sales-ops', 'product', 'design-team', 'it-support', 'legal']) + '@company' + M.dom,
+            subj, body, att: Math.random() < 0.5 ? pick(M.files) : ''
+        };
     }
 
     function sceneMail(stage) {
         stage.className = 'w-full h-full flex flex-col text-slate-800 select-none';
         stage.style.background = '#f3f2f1';
+        const $ = id => document.getElementById(id);
+        const U = ML[currentLang].ui;
+        const nowTime = () => new Date().toLocaleTimeString(currentLang === 'en' ? 'en-US' : 'en-GB', { hour: '2-digit', minute: '2-digit' });
+        const mt = (h, m) => currentLang === 'en' ? `${h}:${pad(m)} AM` : `${pad(h)}:${pad(m)}`;
+        const sentMails = [
+            { ...makeMail(), time: mt(9, 20 + rnd(40)) },
+            { ...makeMail(), time: mt(9, rnd(20)) },
+            { ...makeMail(), time: mt(8, 30 + rnd(30)) }
+        ];
         stage.innerHTML = `
             <div class="h-10 bg-[#0f6cbd] text-white flex items-center px-4 text-sm font-semibold">Outlook</div>
             <div class="flex flex-1 min-h-0">
                 <div class="hidden sm:block w-44 bg-white border-r p-3 text-sm space-y-2">
-                    <div class="font-semibold text-[#0f6cbd]">📥 ${tr('收件匣', '收件箱')} (12)</div>
-                    <div>📤 ${tr('寄件備份', '已发送')}</div>
-                    <div>📝 ${tr('草稿', '草稿')}</div>
-                    <div>🗑️ ${tr('刪除的郵件', '已删除')}</div>
+                    <div id="fold-inbox" class="font-semibold text-[#0f6cbd]">📥 ${U[0]} (${3 + rnd(20)})</div>
+                    <div id="fold-sent">📤 ${U[1]}</div>
+                    <div>📝 ${U[2]}</div>
+                    <div>🗑️ ${U[3]}</div>
                 </div>
-                <div class="flex-1 bg-white m-2 sm:m-4 rounded shadow p-4 flex flex-col min-w-0">
-                    <div class="text-sm border-b py-2"><span class="text-slate-400 mr-2">${tr('收件者', '收件人')}</span><span id="mail-to"></span></div>
-                    <div class="text-sm border-b py-2"><span class="text-slate-400 mr-2">${tr('主旨', '主题')}</span><span id="mail-subj"></span></div>
-                    <div id="mail-body" class="flex-1 text-sm py-3 whitespace-pre-wrap leading-relaxed overflow-hidden"></div>
-                    <div class="flex items-center gap-3">
-                        <span class="bg-[#0f6cbd] text-white text-sm px-5 py-1.5 rounded">${tr('傳送', '发送')}</span>
-                        <span id="mail-status" class="text-xs text-emerald-600"></span>
-                    </div>
-                </div>
+                <div id="mail-main" class="flex-1 min-w-0 m-2 sm:m-4 flex flex-col"></div>
             </div>`;
-        const mails = getMails();
-        let idx = 0;
-        const run = () => {
-            const m = mails[idx++ % mails.length];
-            const to = document.getElementById('mail-to');
-            const subj = document.getElementById('mail-subj');
-            const body = document.getElementById('mail-body');
-            const status = document.getElementById('mail-status');
-            if (!to) return;
-            to.innerText = m.to; subj.innerText = ''; body.innerText = ''; status.innerText = '';
-            let s = 0, b = 0;
-            const t = setInterval(() => {
-                if (s < m.subj.length) subj.innerText = m.subj.slice(0, ++s);
-                else if (b < m.body.length) body.innerText = m.body.slice(0, ++b);
-                else {
-                    clearInterval(t);
-                    status.innerText = tr('✓ 郵件已傳送', '✓ 邮件已发送');
-                    busyTimers.push(setTimeout(run, 2200));
-                }
-            }, 70);
-            busyTimers.push(t);
+        const main = $('mail-main');
+        const caret = document.createElement('span');
+        caret.textContent = '|';
+        caret.className = 'animate-pulse';
+        let view = 'compose', mail, s, b, state, sending = false;
+
+        const setActive = id => {
+            ['fold-inbox', 'fold-sent'].forEach(f => $(f).className = f === id ? 'font-semibold text-[#0f6cbd]' : '');
         };
-        run();
+
+        const renderCompose = () => {
+            view = 'compose'; mail = makeMail(); s = 0; b = 0; state = 'typing'; sending = false;
+            setActive('fold-inbox');
+            main.innerHTML = `
+                <div class="relative bg-white rounded shadow p-4 flex flex-col flex-1 min-w-0 overflow-hidden">
+                    <div id="mail-prog" class="absolute top-0 left-0 h-0.5 bg-[#0f6cbd]" style="width:0;transition:width .9s linear"></div>
+                    <div class="text-sm border-b py-2"><span class="text-slate-400 mr-2">${U[4]}</span><span id="mail-to"></span></div>
+                    <div class="text-sm border-b py-2"><span class="text-slate-400 mr-2">${U[5]}</span><span id="mail-subj"><span id="mail-subj-t"></span></span></div>
+                    ${mail.att ? `<div class="text-sm border-b py-2"><span class="text-slate-400 mr-2">📎</span>${mail.att}</div>` : ''}
+                    <div id="mail-body" class="flex-1 text-sm py-3 whitespace-pre-wrap leading-relaxed overflow-hidden"><span id="mail-body-t"></span></div>
+                    <div class="flex items-center gap-3">
+                        <button id="mail-send" class="bg-[#0f6cbd] hover:bg-[#115ea3] text-white text-sm px-5 py-1.5 rounded cursor-pointer">${U[6]}</button>
+                    </div>
+                </div>`;
+            $('mail-to').textContent = mail.to;
+            $('mail-subj').appendChild(caret);
+            $('mail-send').onclick = ev => { ev.stopPropagation(); sendMail(); };
+        };
+
+        const renderSent = () => {
+            view = 'sent';
+            setActive('fold-sent');
+            main.innerHTML = `
+                <div class="relative bg-white rounded shadow p-4 flex flex-col flex-1 min-w-0 overflow-hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="font-semibold">📤 ${U[1]}</div>
+                        <button id="mail-new" class="bg-[#0f6cbd] hover:bg-[#115ea3] text-white text-sm px-4 py-1.5 rounded cursor-pointer">＋ ${U[9]}</button>
+                    </div>
+                    <div class="overflow-hidden">${sentMails.map((m, i) => `
+                        <div class="flex gap-3 border-b py-2 text-sm ${i === 0 ? 'bg-blue-50' : ''}">
+                            <span class="w-40 sm:w-56 truncate font-semibold shrink-0">${m.to}</span>
+                            <span class="flex-1 truncate">${m.subj}</span>
+                            <span class="text-slate-400 shrink-0">${m.time}</span>
+                        </div>`).join('')}
+                    </div>
+                    <div id="mail-toast" class="absolute left-1/2 -translate-x-1/2 top-3 bg-slate-800 text-white text-xs px-4 py-2 rounded shadow">✓ ${U[8]}</div>
+                </div>`;
+            $('mail-new').onclick = ev => { ev.stopPropagation(); renderCompose(); };
+            busyTimers.push(setTimeout(() => { const t = $('mail-toast'); if (t) t.remove(); }, 2500));
+        };
+
+        const sendMail = () => {
+            if (view !== 'compose' || sending) return;
+            sending = true;
+            s = mail.subj.length; b = mail.body.length;
+            $('mail-subj-t').textContent = mail.subj;
+            $('mail-body-t').textContent = mail.body;
+            caret.remove();
+            const btn = $('mail-send');
+            btn.textContent = U[7];
+            btn.classList.add('opacity-60');
+            void $('mail-prog').offsetWidth;
+            $('mail-prog').style.width = '100%';
+            busyTimers.push(setTimeout(() => {
+                sentMails.unshift({ to: mail.to, subj: mail.subj, time: nowTime() });
+                renderSent();
+            }, 1000));
+        };
+
+        busyKeyHandler = e => {
+            if (e.key.startsWith('Arrow')) return;
+            if (view === 'sent') { renderCompose(); return; }
+            if (sending) return;
+            if (state === 'done') { sendMail(); return; }
+            const step = 2 + rnd(3);
+            if (s < mail.subj.length) {
+                s = Math.min(mail.subj.length, s + step);
+                $('mail-subj-t').textContent = mail.subj.slice(0, s);
+                if (s >= mail.subj.length) $('mail-body').appendChild(caret);
+            } else {
+                b = Math.min(mail.body.length, b + step);
+                $('mail-body-t').textContent = mail.body.slice(0, b);
+                if (b >= mail.body.length) state = 'done';
+            }
+        };
+        busyInteractive = true;
+        renderCompose();
+        main.onclick = () => { busyKeyHandler({ key: 'a' }); hintTyped(); };
     }
 
-    // 場景三：Excel 試算表
+    // Excel：依地區（內地 / 香港 / 台灣 / 歐美）切換用字、日期、貨幣與版面
+    const pad = n => String(n).padStart(2, '0');
+    const fmtN = v => Number(v).toLocaleString('en-US');
+    const digits = n => String(rnd(10 ** n)).padStart(n, '0');
+    const sp = x => x.split('|');
+    const XR = {
+        cn: { cur: '¥', dec: 1, d: (y, m, d) => `${y}-${m}-${d}`, tab: 'Sheet1', ready: '就绪',
+            t: '销售明细|库存盘点表|费用报销明细',
+            h: ['订单编号|日期|客户名称|产品|数量|单价|金额|业务员', '料号|品名|规格|单位|账面数量|实盘数量|差异|储位', '单号|日期|部门|费用类别|摘要|金额|申请人|状态'],
+            p: { customer: '瑞丰科技有限公司|宏达贸易|大成食品|恒通物流|新光材料|鼎盛国际|和顺电机|信义工程|晨星数码|太平洋实业', product: '无线鼠标 M330|机械键盘 K87|27英寸显示器 Q27|USB-C 扩展坞|笔记本支架 S2|降噪耳机 H500|网络摄像头 C920|移动电源 20000mAh',
+                sales: '王伟|李娜|张磊|刘洋|陈静|杨帆', spec: '黑色|白色|银色|标准版|Pro 版', unit: '台|个|件|箱', dept: '市场部|销售部|财务部|研发部|人事部|行政部',
+                cat: '差旅费|交通费|餐费|办公用品|广告费|招待费', memo: '客户拜访高铁票|部门聚餐|打印机碳粉|广告投放|展会摊位费|出租车费', status: '已审批|待审核|已付款' } },
+        zh: { cur: 'HK$', dec: 1, d: (y, m, d) => `${d}/${m}/${y}`, tab: 'Sheet1', ready: '就緒',
+            t: 'Sales Detail 銷售明細|Stock Take 庫存盤點|Expense Claim 報銷明細',
+            h: ['Order No.|日期 Date|客戶 Customer|產品 Product|數量 Qty|單價 Price|金額 Amount|負責人 Sales', 'Item Code|品名 Item|規格 Spec|單位 UOM|帳面數量|實盤數量|差異 Var.|貨倉位置', 'Ref. No.|日期 Date|部門 Dept|類別 Category|摘要 Remarks|金額 Amount|申請人 Claimant|狀態 Status'],
+            p: { customer: '宏達科技有限公司|永豐貿易有限公司|大成食品集團|恒通物流|新光材料(香港)|鼎盛國際|和順電機工程|信義工程|晨星數碼|太平洋實業', product: '無線滑鼠 M330|機械鍵盤 K87|27吋顯示器 Q27|USB-C 擴展座|手提電腦支架 S2|降噪耳機 H500|網絡攝影機 C920|流動電源 20000mAh',
+                sales: 'Winnie Chan|Kelvin Lau|Ivy Wong|Jason Cheung|Ada Lee|Cindy Ng', spec: '黑色|白色|銀色|標準版|Pro 版', unit: '部|個|件|箱', dept: '市場部|業務部|財務部|研發部|人力資源部|行政部',
+                cat: '交通費|膳食|辦公室用品|廣告費|應酬費|郵遞費', memo: '客戶會議車費|部門午膳|打印機碳粉|廣告投放|展覽攤位費|的士費', status: '已批核|待審批|已付款' } },
+        tw: { cur: 'NT$', dec: 0, d: (y, m, d) => `${y}/${m}/${d}`, tab: '工作表1', ready: '就緒',
+            t: '銷售明細|庫存盤點表|費用報銷明細',
+            h: ['訂單編號|日期|客戶名稱|產品|數量|單價|金額|業務員', '料號|品名|規格|單位|帳面數量|實盤數量|差異|儲位', '單號|日期|部門|費用類別|摘要|金額|申請人|狀態'],
+            p: { customer: '宏達科技有限公司|永豐貿易|大成食品|恆通物流|新光材料|鼎盛國際|和順電機|信義工程|晨星數位|太平洋實業', product: '無線滑鼠 M330|機械鍵盤 K87|27吋顯示器 Q27|USB-C 集線器|筆電支架 S2|降噪耳機 H500|網路攝影機 C920|行動電源 20000mAh',
+                sales: '陳志明|林雅婷|黃建宏|張怡君|李家豪|吳佩珊', spec: '黑色|白色|銀色|標準版|Pro 版', unit: '台|個|件|箱', dept: '行銷部|業務部|財務部|研發部|人資部|行政部',
+                cat: '差旅費|交通費|餐費|辦公用品|廣告費|招待費', memo: '客戶拜訪高鐵票|部門聚餐|印表機碳粉|廣告投放|展會攤位費|計程車資', status: '已核准|待審核|已付款' } },
+        en: { cur: '$', dec: 1, d: (y, m, d) => `${m}/${d}/${y}`, tab: 'Sheet1', ready: 'Ready',
+            t: 'Sales_Report_Q3|Inventory_Count|Expense_Report',
+            h: ['Order No.|Date|Customer|Product|Qty|Unit Price|Amount|Sales Rep', 'SKU|Item|Spec|UoM|Book Qty|Count Qty|Variance|Location', 'Report ID|Date|Department|Category|Description|Amount|Employee|Status'],
+            p: { customer: 'Northwind Traders|Contoso Ltd|Fabrikam Inc|Tailspin Toys|Adventure Works|Litware Inc|Proseware|Wingtip Toys|Lucerne Publishing|Coho Winery', product: 'Wireless Mouse M330|Mechanical Keyboard K87|27" Monitor Q27|USB-C Hub|Laptop Stand S2|Noise-Cancelling Headphones|HD Webcam C920|Power Bank 20000mAh',
+                sales: 'John Smith|Emily Davis|Michael Brown|Sarah Wilson|David Miller|Jessica Taylor', spec: 'Black|White|Silver|Standard|Pro', unit: 'EA|PC|BOX|SET', dept: 'Marketing|Sales|Finance|R&D|HR|Operations',
+                cat: 'Travel|Meals|Office Supplies|Advertising|Entertainment|Software', memo: 'Client visit airfare|Team lunch|Printer toner|Ad campaign|Trade show booth|Rideshare to client site', status: 'Approved|Pending|Paid' } }
+    };
+    const XR2 = {
+        cn: { t: '项目进度跟踪|考勤打卡记录', h: ['项目编号|任务名称|负责人|开始日期|截止日期|完成度|优先级|状态', '工号|姓名|部门|日期|上班打卡|下班打卡|工时|考勤状态'],
+            p: { task: '需求评审|接口联调|UI 走查|压力测试|上线方案|数据迁移|用户调研|文档整理', prio: '高|中|低|紧急', state: '进行中|未开始|已完成|已延期', att: '正常|迟到|请假|外勤|加班' } },
+        zh: { t: 'Project Tracker 項目進度|Attendance 考勤記錄', h: ['Project ID|任務 Task|負責人 Owner|開始日期 Start|到期日 Due|進度 %|優先次序|狀態 Status', '員工編號|姓名 Name|部門 Dept|日期 Date|返工時間|放工時間|工時 Hrs|考勤 Status'],
+            p: { task: '需求檢討|系統對接|UI 檢查|壓力測試|上線計劃|數據遷移|客戶調查|文件整理', prio: '高|中|低|緊急', state: '進行中|未開始|已完成|已延誤', att: '正常|遲到|病假|外勤|OT' } },
+        tw: { t: '專案進度追蹤|出勤打卡紀錄', h: ['專案編號|任務名稱|負責人|開始日期|截止日期|完成度|優先順序|狀態', '員工編號|姓名|部門|日期|上班打卡|下班打卡|工時|出勤狀態'],
+            p: { task: '需求評審|介面串接|UI 檢查|壓力測試|上線計畫|資料遷移|使用者訪談|文件整理', prio: '高|中|低|急件', state: '進行中|未開始|已完成|已延遲', att: '正常|遲到|請假|外勤|加班' } },
+        en: { t: 'Project_Tracker|Attendance_Log', h: ['Project ID|Task|Owner|Start Date|Due Date|% Complete|Priority|Status', 'Emp ID|Name|Department|Date|Clock In|Clock Out|Hours|Status'],
+            p: { task: 'Requirements review|API integration|UI QA pass|Load testing|Release plan|Data migration|User interviews|Docs cleanup', prio: 'High|Medium|Low|Urgent', state: 'In Progress|Not Started|Completed|Delayed', att: 'On time|Late|PTO|Remote|Overtime' } }
+    };
+    Object.keys(XR).forEach(k => { XR[k].t += '|' + XR2[k].t; XR[k].h.push(...XR2[k].h); Object.assign(XR[k].p, XR2[k].p); });
+    const KINDS = [['so', 'date', 'customer', 'product', 'qty', 'price', 'amount', 'sales'], ['sku', 'product', 'spec', 'unit', 'qty', 'qty', 'diff', 'loc'], ['exp', 'date', 'dept', 'cat', 'memo', 'amount', 'sales', 'status'],
+        ['pid', 'task', 'sales', 'date', 'date', 'pct', 'prio', 'state'], ['eid', 'sales', 'dept', 'date', 'tin', 'tout', 'hrs', 'att']];
+    const XLS = () => { const L = XR[currentLang]; return KINDS.map((kinds, i) => ({ title: sp(L.t)[i] + '.xlsx', heads: sp(L.h[i]), kinds })); };
+    function genVal(kind) {
+        const L = XR[currentLang], y = new Date().getFullYear();
+        if (L.p[kind]) return pick(sp(L.p[kind]));
+        const money = v => L.cur + fmtN(v) + (L.dec ? '.' + pad(rnd(100)) : '');
+        switch (kind) {
+            case 'so': return 'SO-' + y + (1000 + rnd(9000));
+            case 'exp': return 'EX-' + y + (1000 + rnd(9000));
+            case 'sku': return 'SKU-' + (10000 + rnd(89999));
+            case 'date': return L.d(y, pad(1 + rnd(11)), pad(1 + rnd(28)));
+            case 'pid': return 'PRJ-' + (100 + rnd(900));
+            case 'eid': return 'E' + (1000 + rnd(9000));
+            case 'pct': return rnd(101) + '%';
+            case 'hrs': return (7 + rnd(4)) + '.' + pick(['0', '5']);
+            case 'tin': case 'tout': {
+                const h = kind === 'tin' ? 8 + rnd(2) : 17 + rnd(3), m = rnd(60);
+                return currentLang === 'en' ? `${h % 12 || 12}:${pad(m)} ${h < 12 ? 'AM' : 'PM'}` : `${pad(h)}:${pad(m)}`;
+            }
+            case 'qty': return String(1 + rnd(500));
+            case 'price': return money(50 + rnd(4000));
+            case 'amount': return money(1000 + rnd(900000));
+            case 'diff': return String(rnd(21) - 10);
+            case 'loc': return `${pick(['A', 'B', 'C'])}-0${1 + rnd(9)}-${pad(1 + rnd(20))}`;
+        }
+        return '';
+    }
+
     function sceneExcel(stage) {
         stage.className = 'w-full h-full flex flex-col text-slate-800 select-none text-xs sm:text-sm';
         stage.style.background = '#fff';
-        const cols = 'ABCDEFGH'.split('');
-        const rows = 24;
-        const num = () => (Math.random() * 90000 + 1000).toLocaleString('en-US', { maximumFractionDigits: 0 });
-        let html = `<tr><th class="bg-slate-100 border border-slate-200 w-8"></th>${cols.map(c => `<th class="bg-slate-100 border border-slate-200 font-normal text-slate-500">${c}</th>`).join('')}</tr>`;
-        for (let r = 0; r < rows; r++) {
-            html += `<tr><td class="bg-slate-100 border border-slate-200 text-center text-slate-500">${r + 1}</td>${cols.map((c, ci) => `<td id="xc-${r}-${ci}" class="border border-slate-200 px-2 py-0.5 text-right font-mono-num">${num()}</td>`).join('')}</tr>`;
+        const LC = XR[currentLang], sheet = pick(XLS());
+        const stripe = Math.random() < 0.5, hdr = pick(['bg-slate-50', 'bg-emerald-100', 'bg-sky-100', 'bg-amber-100']);
+        const kinds = sheet.kinds;
+        const heads = sheet.heads;
+        const L = 'ABCDEFGH'.split('');
+        const rows = 30;
+        const numeric = new Set(['qty', 'price', 'amount', 'diff', 'pct', 'hrs']);
+        const cellCls = c => 'border border-slate-200 px-2 py-0.5 truncate ' + (numeric.has(kinds[c]) ? 'text-right font-mono-num' : '');
+        let html = `<tr><th class="bg-slate-100 border border-slate-200 w-10"></th>${L.map(c => `<th class="bg-slate-100 border border-slate-200 font-normal text-slate-500">${c}</th>`).join('')}</tr>`;
+        html += `<tr><td class="bg-slate-100 border border-slate-200 text-center text-slate-500">1</td>${heads.map((h, c) => `<td id="xc-0-${c}" class="border border-slate-200 px-2 py-0.5 truncate font-semibold ${hdr}">${h}</td>`).join('')}</tr>`;
+        for (let r = 1; r <= rows; r++) {
+            html += `<tr class="${stripe && r % 2 === 0 ? 'bg-sky-50/60' : ''}"><td class="bg-slate-100 border border-slate-200 text-center text-slate-500">${r + 1}</td>${kinds.map((k, c) => `<td id="xc-${r}-${c}" class="${cellCls(c)}">${genVal(k)}</td>`).join('')}</tr>`;
         }
         stage.innerHTML = `
             <style>.xl-sel{outline:2px solid #217346;outline-offset:-2px;background:#e8f5ee}</style>
-            <div class="h-9 bg-[#217346] text-white flex items-center px-4 font-semibold">Excel — ${tr('第三季銷售分析.xlsx', '第三季度销售分析.xlsx')}</div>
-            <div class="h-8 border-b flex items-center px-2 gap-2">
-                <span id="xl-ref" class="w-14 border-r text-center font-mono-num">A1</span>
+            <div class="h-9 bg-[#217346] text-white flex items-center px-4 font-semibold shrink-0">Excel — ${sheet.title}</div>
+            <div class="h-8 border-b flex items-center px-2 gap-2 shrink-0">
+                <span id="xl-ref" class="w-14 border-r text-center font-mono-num"></span>
                 <span class="text-slate-400 italic">fx</span>
                 <span id="xl-fx" class="font-mono-num truncate"></span>
             </div>
-            <div class="flex-1 overflow-hidden"><table class="border-collapse w-full table-fixed">${html}</table></div>`;
-        let sel = null;
-        busyEvery(() => {
+            <div class="flex-1 overflow-auto"><table class="border-collapse w-full table-fixed">${html}</table></div>
+            <div class="h-7 bg-slate-100 border-t flex items-center px-3 shrink-0 text-slate-600"><span class="bg-white px-3 py-0.5 border-t-2 border-[#217346] font-semibold">${LC.tab}</span><span class="ml-auto">${LC.ready}</span></div>`;
+
+        let r = 1 + rnd(6), c = rnd(8), target = '', orig = '', formula = '', n = 0, sel = null;
+        const select = () => {
             if (sel) sel.classList.remove('xl-sel');
-            const r = rnd(rows), c = rnd(cols.length);
             sel = document.getElementById(`xc-${r}-${c}`);
-            if (!sel) return;
-            sel.innerText = num();
             sel.classList.add('xl-sel');
-            document.getElementById('xl-ref').innerText = cols[c] + (r + 1);
-            document.getElementById('xl-fx').innerText = `=SUM(${cols[c]}1:${cols[c]}${rows})`;
-        }, 600);
+            sel.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+            orig = sel.textContent;
+            formula = r > 2 && numeric.has(kinds[c]) && Math.random() < 0.3 ? `=SUM(${L[c]}2:${L[c]}${r})` : '';
+            target = formula || (r === 0 ? heads[c] : genVal(kinds[c]));
+            n = 0;
+            document.getElementById('xl-ref').textContent = L[c] + (r + 1);
+            document.getElementById('xl-fx').textContent = orig;
+        };
+        const commit = () => { if (n > 0) sel.textContent = formula ? genVal(kinds[c]) : target; };
+        const move = (dr, dc) => {
+            commit();
+            r = Math.max(0, Math.min(rows, r + dr));
+            c = Math.max(0, Math.min(7, c + dc));
+            select();
+        };
+        busyKeyHandler = e => {
+            const k = e.key;
+            if (k === 'ArrowUp') return move(-1, 0);
+            if (k === 'ArrowDown' || k === 'Enter') return move(1, 0);
+            if (k === 'ArrowLeft') return move(0, -1);
+            if (k === 'ArrowRight' || k === 'Tab') return move(0, 1);
+            if (k === 'Backspace') {
+                if (n > 0) {
+                    n--;
+                    const t = n > 0 ? target.slice(0, n) : orig;
+                    sel.textContent = t;
+                    document.getElementById('xl-fx').textContent = t;
+                }
+                return;
+            }
+            n++;
+            sel.textContent = target.slice(0, n);
+            document.getElementById('xl-fx').textContent = target.slice(0, n);
+            if (n >= target.length) move(1, 0);
+        };
+        stage.onclick = ev => {
+            const td = ev.target.closest && ev.target.closest('td[id^="xc-"]');
+            if (!td) return;
+            commit();
+            const parts = td.id.split('-');
+            r = +parts[1]; c = +parts[2];
+            select();
+        };
+        busyInteractive = true;
+        select();
     }
 
-    // 場景四：程式編譯終端機
+    function busyOverlayClick() { if (!busyInteractive) closeBusy(); }
+
+    // 場景四：程式編譯終端機（自動，每次隨機）
     function sceneCode(stage) {
         stage.className = 'w-full h-full p-4 overflow-hidden font-mono-num text-xs sm:text-sm text-green-400 select-none flex flex-col justify-end';
         stage.style.background = '#0c0c0c';
@@ -957,22 +1303,53 @@
         const files = ['index', 'utils', 'service', 'controller', 'types', 'config'];
         const gen = () => {
             const ts = new Date().toLocaleTimeString('en-GB');
-            const m = mods[rnd(mods.length)], f = files[rnd(files.length)], r = Math.random();
+            const m = pick(mods), f = pick(files), r = Math.random();
             if (r < 0.55) return `[${ts}] INFO  Compiling ${m}/src/${f}.ts`;
             if (r < 0.75) return `[${ts}] OK    ${m} built in ${(Math.random() * 3 + 0.3).toFixed(1)}s`;
             if (r < 0.88) return `[${ts}] TEST  ${rnd(40) + 100} passed, 0 failed (${m})`;
             return `[${ts}] WARN  deprecated API used in ${m}/${f}.ts`;
         };
-        const add = () => {
+        const add = text => {
             const line = document.createElement('div');
-            const text = gen();
             line.textContent = text;
             if (text.includes('WARN')) line.className = 'text-yellow-300';
             term.appendChild(line);
             while (term.children.length > 60) term.removeChild(term.firstChild);
         };
-        for (let i = 0; i < 25; i++) add();
-        busyEvery(() => { if (Math.random() < 0.8) add(); }, 250);
+        add(pick(['> npm run build', '> mvn clean package', '> cargo build --release', '> gradle assemble', '> make -j8']));
+        for (let i = 0; i < 24; i++) add(gen());
+        busyEvery(() => { if (Math.random() < 0.8) add(gen()); }, 250);
+    }
+
+    // 鍵盤提示：進場顯示 5 秒，之後停手 12 秒會再次提示，一打字即消失
+    let hintEl = null, hintOn = false, hintHideT = null, hintIdleT = null;
+    function hintShow() {
+        if (!hintOn) return;
+        hintEl.style.opacity = 1;
+        clearTimeout(hintHideT);
+        hintHideT = setTimeout(() => { hintEl.style.opacity = 0; }, 5000);
+    }
+    function hintStart(text) {
+        if (!hintEl) {
+            hintEl = document.createElement('div');
+            hintEl.className = 'fixed left-1/2 -translate-x-1/2 bottom-8 z-[80] max-w-[90vw] text-center bg-slate-900/90 text-white text-xs sm:text-sm px-4 py-2 rounded-full shadow-lg border border-white/20 pointer-events-none transition-opacity duration-500';
+            busyEl.appendChild(hintEl);
+        }
+        hintStop();
+        hintOn = true;
+        hintEl.textContent = text;
+        hintShow();
+    }
+    function hintTyped() {
+        if (!hintOn) return;
+        hintEl.style.opacity = 0;
+        clearTimeout(hintHideT); clearTimeout(hintIdleT);
+        hintIdleT = setTimeout(hintShow, 12000);
+    }
+    function hintStop() {
+        hintOn = false;
+        clearTimeout(hintHideT); clearTimeout(hintIdleT);
+        if (hintEl) hintEl.style.opacity = 0;
     }
 
     function openBusy(scene) {
@@ -980,8 +1357,13 @@
         const stage = document.getElementById('busy-stage');
         stage.innerHTML = '';
         stage.style.background = '';
+        stage.style.fontFamily = '';
+        stage.onclick = null;
         const scenes = { update: sceneUpdate, mail: sceneMail, excel: sceneExcel, code: sceneCode };
         (scenes[scene] || sceneUpdate)(stage);
+        const touch = window.matchMedia && matchMedia('(pointer:coarse)').matches;
+        if (scene === 'mail') hintStart(touch ? tr('👆 點擊畫面，郵件會自動寫出嚟', '👆 点击屏幕，邮件会自动写出来', '👆 Tap the screen — the email writes itself') : tr('⌨️ 用鍵盤隨便打字，郵件會自動寫出嚟', '⌨️ 随便敲键盘，邮件会自动写出来', '⌨️ Just type on your keyboard — the email writes itself', '⌨️ 隨便敲鍵盤，郵件就會自動寫出來'));
+        if (scene === 'excel') hintStart(touch ? tr('👆 點擊儲存格選取，再用鍵盤打字', '👆 点击单元格选取，再用键盘输入', '👆 Tap a cell, then type') : tr('⌨️ 用鍵盤打字填格，方向鍵 / Enter / Tab 移動', '⌨️ 敲键盘填格，方向键 / Enter / Tab 移动', '⌨️ Type to fill cells · Arrows / Enter / Tab to move'));
         busyEl.classList.remove('hidden');
         busyEl.classList.add('flex');
         try { busyEl.requestFullscreen && busyEl.requestFullscreen().catch(() => {}); } catch (e) {}
@@ -994,10 +1376,90 @@
         if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     }
 
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeBusy(); });
+    document.addEventListener('keydown', e => {
+        if (busyEl.classList.contains('hidden')) return;
+        if (e.key === 'Escape') { closeBusy(); return; }
+        if (!busyKeyHandler || e.ctrlKey || e.metaKey || e.altKey) return;
+        if (e.key.length === 1 || ['Enter', 'Backspace', 'Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+            e.preventDefault();
+            busyKeyHandler(e);
+            hintTyped();
+        }
+    });
     document.addEventListener('fullscreenchange', () => {
         if (!document.fullscreenElement && !busyEl.classList.contains('hidden')) closeBusy();
     });
+
+    // ---------- 分享圖片 ----------
+    const shareEl = document.getElementById('share-modal');
+    let shareBlob = null;
+    function toggleShare(show) {
+        shareEl.classList.toggle('hidden', !show);
+        shareEl.classList.toggle('flex', show);
+    }
+    async function openShare() { toggleShare(true); await drawShare(); }
+    async function drawShare() {
+        try { await document.fonts.ready; } catch (e) {}
+        const W = 1080, H = 1350, c = document.createElement('canvas');
+        c.width = W; c.height = H;
+        const g = c.getContext('2d'), t = i18nData[currentLang], $ = id => document.getElementById(id);
+        const sans = "'Noto Sans TC','PingFang SC','Microsoft YaHei',sans-serif", mono = "'JetBrains Mono',monospace";
+        const bg = g.createLinearGradient(0, 0, W, H);
+        bg.addColorStop(0, '#0f172a'); bg.addColorStop(1, '#1e293b');
+        g.fillStyle = bg; g.fillRect(0, 0, W, H);
+        [[0, 0, 'rgba(249,115,22,.3)'], [W, H, 'rgba(16,185,129,.26)']].forEach(([x, y, col]) => {
+            const r = g.createRadialGradient(x, y, 0, x, y, 640);
+            r.addColorStop(0, col); r.addColorStop(1, 'rgba(0,0,0,0)');
+            g.fillStyle = r; g.fillRect(0, 0, W, H);
+        });
+        g.textAlign = 'center';
+        const txt = (s, y, size, color, font = sans, w = '700') => { g.font = `${w} ${size}px ${font}`; g.fillStyle = color; g.fillText(s, W / 2, y); };
+        txt(t.title, 120, 46, '#fdba74');
+        txt($('today-date').innerText, 175, 30, '#94a3b8');
+        const pct = parseInt($('progress-percent').innerText) || 0, cx = W / 2, cy = 520, R = 235;
+        g.lineWidth = 44; g.lineCap = 'round'; g.strokeStyle = '#273449';
+        g.beginPath(); g.arc(cx, cy, R, 0, Math.PI * 2); g.stroke();
+        if (pct > 0) {
+            const ag = g.createLinearGradient(cx - R, cy - R, cx + R, cy + R);
+            ag.addColorStop(0, '#f97316'); ag.addColorStop(1, '#facc15');
+            g.strokeStyle = ag; g.beginPath(); g.arc(cx, cy, R, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * pct / 100); g.stroke();
+        }
+        txt(pct + '%', cy + 45, 140, '#fb923c', mono, '800');
+        txt(t.progress_title, cy + 115, 34, '#cbd5e1');
+        txt(statusTitleEl.innerText, 880, 54, '#fbbf24', sans, '900');
+        txt(`${$('hours').innerText}:${$('minutes').innerText}:${$('seconds').innerText}`, 1015, 110, '#fde68a', mono, '800');
+        let y = 1090;
+        if ($('share-money').checked) { txt($('currency-symbol').innerText.trim() + $('earned-money').innerText, 1090, 56, '#34d399', mono, '800'); y = 1160; }
+        const quote = quoteTextEl.innerText;
+        g.font = `500 32px ${sans}`; g.fillStyle = '#fcd34d';
+        const words = currentLang === 'en' ? quote.split(' ').map(w => w + ' ') : [...quote], lines = [];
+        let line = '';
+        words.forEach(w => { if (g.measureText(line + w).width > W - 220) { lines.push(line); line = w; } else line += w; });
+        lines.push(line);
+        lines.slice(0, 3).forEach((l, i) => g.fillText(l.trim(), W / 2, y + i * 48));
+        txt(t.share_foot, 1305, 30, '#64748b', sans, '500');
+        $('share-img').src = c.toDataURL('image/png');
+        c.toBlob(b => { shareBlob = b; }, 'image/png');
+    }
+    function saveImage() {
+        if (!shareBlob) return;
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(shareBlob); a.download = 'moyu-progress.png'; a.click();
+    }
+    async function shareImage() {
+        if (!shareBlob) return;
+        const file = new File([shareBlob], 'moyu-progress.png', { type: 'image/png' });
+        try {
+            if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: i18nData[currentLang].title }); return; }
+        } catch (e) { if (e.name === 'AbortError') return; }
+        saveImage();
+    }
+    async function copyImage() {
+        const btn = document.getElementById('sh-copy'), old = btn.innerText;
+        try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': shareBlob })]); btn.innerText = '✓'; }
+        catch (e) { btn.innerText = '↓'; saveImage(); }
+        setTimeout(() => { btn.innerText = old; }, 1200);
+    }
 
     // ---------- 初始化 ----------
     updateDate();
