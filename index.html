@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="page-title">快樂摸魚🐟一齊吞pop</title>
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-    <script src="https://unpkg.com/lucide@0.460.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.460.0/dist/umd/lucide.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 
@@ -20,6 +20,15 @@
         }
         .glow-orange { box-shadow: 0 0 25px rgba(249, 115, 22, 0.25); }
         .glow-green { box-shadow: 0 0 25px rgba(34, 197, 94, 0.25); }
+        @keyframes pop { 0% { transform: scale(1.7); opacity: .3; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes shake {
+            0%, 100% { transform: translate(0, 0) rotate(-8deg); }
+            25% { transform: translate(-4px, 2px) rotate(-12deg); }
+            50% { transform: translate(4px, -2px) rotate(-4deg); }
+            75% { transform: translate(-3px, -3px) rotate(-10deg); }
+        }
+        .rocket-pop { animation: pop .5s ease-out; }
+        .rocket-shake { animation: shake .3s infinite; }
     </style>
 </head>
 <body class="min-h-screen text-slate-100 flex flex-col items-center justify-center p-4 relative overflow-x-hidden">
@@ -175,6 +184,14 @@
             <i data-lucide="play" class="w-4 h-4 fill-current"></i>
             <span data-i18n="btn_start">保存設定並開始摸魚計時！</span>
         </button>
+
+        <div class="text-xs text-slate-500 mt-4 mb-2 text-center" data-i18n="busy_btn">🕶️ 假裝很忙</div>
+        <div class="grid grid-cols-2 gap-2">
+            <button onclick="openBusy('update')" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl border border-slate-700 transition text-xs cursor-pointer">🪟 Windows Update</button>
+            <button onclick="openBusy('mail')" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl border border-slate-700 transition text-xs cursor-pointer">📧 Outlook</button>
+            <button onclick="openBusy('excel')" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl border border-slate-700 transition text-xs cursor-pointer">📊 Excel</button>
+            <button onclick="openBusy('code')" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl border border-slate-700 transition text-xs cursor-pointer">💻 Terminal</button>
+        </div>
     </main>
 
     <!-- 贊助 Modal -->
@@ -200,6 +217,20 @@
         </div>
     </div>
 
+    <!-- 假裝很忙 -->
+    <div id="busy-overlay" onclick="closeBusy()" class="fixed inset-0 z-[70] hidden flex-col bg-black">
+        <div id="busy-stage" class="w-full h-full"></div>
+        <div class="fixed bottom-1 right-2 text-[10px] text-slate-400/30" data-i18n="busy_exit">按 Esc 或點擊任意處返回</div>
+    </div>
+
+    <!-- 下班發射倒數 -->
+    <div id="rocket-overlay" onclick="dismissRocket()" class="fixed inset-0 z-[60] hidden flex-col items-center justify-center bg-slate-950/95 text-center">
+        <div class="text-lg text-orange-300 mb-2" data-i18n="rocket_title">🔥 下班發射倒數</div>
+        <div id="rocket-num" class="rocket-pop text-[10rem] leading-none font-black text-orange-400 font-mono-num">10</div>
+        <div class="text-7xl rocket-shake mt-4">🚀</div>
+        <div class="text-xs text-slate-500 mt-8" data-i18n="rocket_hint">點擊任意處關閉</div>
+    </div>
+
     <!-- 下班慶祝 -->
     <div id="celebration" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-40 hidden flex-col items-center justify-center p-6 text-center">
         <div class="bg-slate-900 border border-emerald-500/40 rounded-3xl p-8 max-w-sm w-full shadow-2xl glow-green relative overflow-hidden">
@@ -218,13 +249,28 @@
     </div>
 
 <script>
-    lucide.createIcons();
+    if (window.lucide) lucide.createIcons();
 
     // ---------- 多語言字典 ----------
     const i18nData = {
         zh: {
             title: "快樂摸魚🐟一齊吞pop",
             donate: "贊助作者",
+            busy_btn: "🕶️ 假裝很忙",
+            busy_title: "系統處理中，請勿關閉視窗…",
+            busy_exit: "按 Esc 或點擊任意處返回",
+            busy_tasks: ["正在對齊顆粒度", "正在賦能底層邏輯", "正在打通業務閉環", "正在沉澱方法論", "正在拉齊各方認知"],
+            rocket_title: "🔥 下班發射倒數",
+            rocket_hint: "點擊任意處關閉",
+            moods: [
+                [10, "☕ 靈魂尚未開機，目前由肌肉記憶接管。"],
+                [30, "💻 正在假裝專注，其實在想午餐吃什麼。"],
+                [50, "🍱 午餐在召喚，專注力下降 50%。"],
+                [70, "😴 午後昏睡區，眼皮有自己的想法。"],
+                [85, "⏳ 現在是全世界最長的一小時。"],
+                [95, "🏃 全身肌肉已進入撤離姿勢。"],
+                [101, "🚪 靈魂已經踏出公司大門了。"]
+            ],
             status_init: "⚙️ 請先完成基本設置",
             status_before: "⏰ 距離上班還有…",
             status_off: "🎉 今日已下班！",
@@ -279,6 +325,21 @@
         cn: {
             title: "快乐摸鱼🐟一齐吞pop",
             donate: "赞助作者",
+            busy_btn: "🕶️ 假装很忙",
+            busy_title: "系统处理中，请勿关闭窗口…",
+            busy_exit: "按 Esc 或点击任意处返回",
+            busy_tasks: ["正在对齐颗粒度", "正在赋能底层逻辑", "正在打通业务闭环", "正在沉淀方法论", "正在拉齐各方认知"],
+            rocket_title: "🔥 下班发射倒数",
+            rocket_hint: "点击任意处关闭",
+            moods: [
+                [10, "☕ 灵魂尚未开机，目前由肌肉记忆接管。"],
+                [30, "💻 正在假装专注，其实在想午饭吃什么。"],
+                [50, "🍱 午饭在召唤，专注力下降 50%。"],
+                [70, "😴 午后昏睡区，眼皮有自己的想法。"],
+                [85, "⏳ 现在是全世界最长的一小时。"],
+                [95, "🏃 全身肌肉已进入撤离姿势。"],
+                [101, "🚪 灵魂已经踏出公司大门了。"]
+            ],
             status_init: "⚙️ 请先完成基本设置",
             status_before: "⏰ 距离上班还有…",
             status_off: "🎉 今日已下班！",
@@ -384,6 +445,7 @@
         updateTimeOptions();
         setStatus(statusKey);
         updateQuote();
+        lastMoodIdx = -1;
     }
 
     function toggleLanguage() {
@@ -543,6 +605,7 @@
     function hideCelebration() {
         celebrationEl.classList.add('hidden');
         celebrationEl.classList.remove('flex');
+        hideRocket();
     }
 
     function setClock(h, m, s) {
@@ -637,6 +700,7 @@
         // 2. 已下班
         if (currentTime >= targetTime) {
             setStatus('status_off');
+            hideRocket();
             if (!celebrationTriggered) {
                 celebrationTriggered = true;
                 const key = 'celebrated_' + new Date().toDateString();
@@ -670,6 +734,9 @@
 
         const percent = Math.min(100, Math.floor((elapsedWorkSec / totalWorkSec) * 100));
         setProgress(percent);
+
+        updateMood(percent);
+        updateRocket(targetTime - currentTime);
     }
 
     function dismissCelebration() {
@@ -677,10 +744,260 @@
     }
 
     function triggerConfetti() {
-        if (typeof confetti === 'function') {
-            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        beep(1046, 0.4);
+        if (typeof confetti !== 'function') return;
+        confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
+        const end = Date.now() + 1500;
+        (function frame() {
+            confetti({ particleCount: 6, angle: 60, spread: 60, origin: { x: 0 } });
+            confetti({ particleCount: 6, angle: 120, spread: 60, origin: { x: 1 } });
+            if (Date.now() < end) requestAnimationFrame(frame);
+        })();
+    }
+
+    // ---------- 情緒文案 ----------
+    let lastMoodIdx = -1;
+    function updateMood(percent) {
+        const moods = i18nData[currentLang].moods;
+        const idx = moods.findIndex(m => percent < m[0]);
+        if (idx !== -1 && idx !== lastMoodIdx) {
+            lastMoodIdx = idx;
+            quoteTextEl.innerText = moods[idx][1];
         }
     }
+
+    // ---------- 最後 10 秒火箭倒數 ----------
+    const rocketEl = document.getElementById('rocket-overlay');
+    const rocketNumEl = document.getElementById('rocket-num');
+    let rocketDismissed = false;
+    let lastRocketNum = -1;
+    let audioCtx = null;
+
+    function beep(freq, dur) {
+        try {
+            audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state !== 'running') return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.frequency.value = freq;
+            gain.gain.value = 0.08;
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + dur);
+        } catch (e) { /* 瀏覽器不允許自動播放時就靜音 */ }
+    }
+
+    function updateRocket(remainMs) {
+        if (remainMs > 10000) {
+            rocketDismissed = false;
+            lastRocketNum = -1;
+            hideRocket();
+            return;
+        }
+        if (rocketDismissed) return;
+        const n = Math.ceil(remainMs / 1000);
+        rocketEl.classList.remove('hidden');
+        rocketEl.classList.add('flex');
+        if (n !== lastRocketNum) {
+            lastRocketNum = n;
+            rocketNumEl.innerText = n;
+            rocketNumEl.classList.remove('rocket-pop');
+            void rocketNumEl.offsetWidth;
+            rocketNumEl.classList.add('rocket-pop');
+            beep(n <= 3 ? 880 : 440, 0.12);
+        }
+    }
+
+    function hideRocket() {
+        rocketEl.classList.add('hidden');
+        rocketEl.classList.remove('flex');
+    }
+
+    function dismissRocket() {
+        rocketDismissed = true;
+        hideRocket();
+    }
+
+    // ---------- 假裝很忙（擬真場景） ----------
+    const busyEl = document.getElementById('busy-overlay');
+    let busyTimers = [];
+    const rnd = n => Math.floor(Math.random() * n);
+    const tr = (zh, cn) => currentLang === 'zh' ? zh : cn;
+
+    function busyClear() {
+        busyTimers.forEach(t => { clearInterval(t); clearTimeout(t); });
+        busyTimers = [];
+    }
+    function busyEvery(fn, ms) { busyTimers.push(setInterval(fn, ms)); }
+
+    // 場景一：Windows Update
+    function sceneUpdate(stage) {
+        stage.className = 'w-full h-full flex flex-col items-center justify-center text-white select-none cursor-none';
+        stage.style.background = '#0063b1';
+        stage.innerHTML = `
+            <div class="w-12 h-12 border-4 border-white/90 border-t-transparent rounded-full animate-spin mb-8"></div>
+            <div id="upd-text" class="text-2xl mb-3"></div>
+            <div class="text-lg opacity-90">${tr('請不要關閉電腦。', '请不要关闭计算机。')}</div>
+            <div class="text-lg opacity-90 text-center px-6">${tr('您的電腦將會重新啟動數次。這可能需要一些時間。', '你的电脑将会重启几次。这可能需要一些时间。')}</div>`;
+        let p = rnd(20) + 5;
+        const render = () => {
+            document.getElementById('upd-text').innerText = tr(`正在處理更新 ${p}% 完成`, `正在处理更新 ${p}% 完成`);
+        };
+        render();
+        busyEvery(() => { if (Math.random() < 0.5 && p < 99) { p++; render(); } }, 2500);
+    }
+
+    // 場景二：Outlook 發郵件（逐字打出，寄出後換下一封）
+    function getMails() {
+        return currentLang === 'zh' ? [
+            { to: 'marketing-team@company.com', subj: 'RE: 本週專案進度同步',
+              body: '各位同事好，\n\n針對本週專案進度，目前已完成約 80%，剩餘項目預計於週五前對齊完畢。如有任何問題，歡迎隨時與我聯繫。\n\n謝謝。' },
+            { to: 'finance@company.com', subj: 'FW: 第三季費用報表確認',
+              body: 'Hi，\n\n附件為第三季費用報表，請協助確認數字是否正確。若無問題，麻煩於明天下班前回覆，謝謝！' },
+            { to: 'manager@company.com', subj: '週報：本週工作重點與下週計畫',
+              body: '經理好，\n\n本週重點：\n1. 完成需求文件初稿\n2. 與相關部門對齊時程\n\n下週計畫：持續跟進並更新進度。\n\n謝謝。' }
+        ] : [
+            { to: 'marketing-team@company.com', subj: 'RE: 本周项目进度同步',
+              body: '各位同事好，\n\n针对本周项目进度，目前已完成约 80%，剩余项目预计于周五前对齐完毕。如有任何问题，欢迎随时与我联系。\n\n谢谢。' },
+            { to: 'finance@company.com', subj: 'FW: 第三季度费用报表确认',
+              body: 'Hi，\n\n附件为第三季度费用报表，请协助确认数字是否正确。若无问题，麻烦于明天下班前回复，谢谢！' },
+            { to: 'manager@company.com', subj: '周报：本周工作重点与下周计划',
+              body: '经理好，\n\n本周重点：\n1. 完成需求文档初稿\n2. 与相关部门对齐时间表\n\n下周计划：持续跟进并更新进度。\n\n谢谢。' }
+        ];
+    }
+
+    function sceneMail(stage) {
+        stage.className = 'w-full h-full flex flex-col text-slate-800 select-none';
+        stage.style.background = '#f3f2f1';
+        stage.innerHTML = `
+            <div class="h-10 bg-[#0f6cbd] text-white flex items-center px-4 text-sm font-semibold">Outlook</div>
+            <div class="flex flex-1 min-h-0">
+                <div class="hidden sm:block w-44 bg-white border-r p-3 text-sm space-y-2">
+                    <div class="font-semibold text-[#0f6cbd]">📥 ${tr('收件匣', '收件箱')} (12)</div>
+                    <div>📤 ${tr('寄件備份', '已发送')}</div>
+                    <div>📝 ${tr('草稿', '草稿')}</div>
+                    <div>🗑️ ${tr('刪除的郵件', '已删除')}</div>
+                </div>
+                <div class="flex-1 bg-white m-2 sm:m-4 rounded shadow p-4 flex flex-col min-w-0">
+                    <div class="text-sm border-b py-2"><span class="text-slate-400 mr-2">${tr('收件者', '收件人')}</span><span id="mail-to"></span></div>
+                    <div class="text-sm border-b py-2"><span class="text-slate-400 mr-2">${tr('主旨', '主题')}</span><span id="mail-subj"></span></div>
+                    <div id="mail-body" class="flex-1 text-sm py-3 whitespace-pre-wrap leading-relaxed overflow-hidden"></div>
+                    <div class="flex items-center gap-3">
+                        <span class="bg-[#0f6cbd] text-white text-sm px-5 py-1.5 rounded">${tr('傳送', '发送')}</span>
+                        <span id="mail-status" class="text-xs text-emerald-600"></span>
+                    </div>
+                </div>
+            </div>`;
+        const mails = getMails();
+        let idx = 0;
+        const run = () => {
+            const m = mails[idx++ % mails.length];
+            const to = document.getElementById('mail-to');
+            const subj = document.getElementById('mail-subj');
+            const body = document.getElementById('mail-body');
+            const status = document.getElementById('mail-status');
+            if (!to) return;
+            to.innerText = m.to; subj.innerText = ''; body.innerText = ''; status.innerText = '';
+            let s = 0, b = 0;
+            const t = setInterval(() => {
+                if (s < m.subj.length) subj.innerText = m.subj.slice(0, ++s);
+                else if (b < m.body.length) body.innerText = m.body.slice(0, ++b);
+                else {
+                    clearInterval(t);
+                    status.innerText = tr('✓ 郵件已傳送', '✓ 邮件已发送');
+                    busyTimers.push(setTimeout(run, 2200));
+                }
+            }, 70);
+            busyTimers.push(t);
+        };
+        run();
+    }
+
+    // 場景三：Excel 試算表
+    function sceneExcel(stage) {
+        stage.className = 'w-full h-full flex flex-col text-slate-800 select-none text-xs sm:text-sm';
+        stage.style.background = '#fff';
+        const cols = 'ABCDEFGH'.split('');
+        const rows = 24;
+        const num = () => (Math.random() * 90000 + 1000).toLocaleString('en-US', { maximumFractionDigits: 0 });
+        let html = `<tr><th class="bg-slate-100 border border-slate-200 w-8"></th>${cols.map(c => `<th class="bg-slate-100 border border-slate-200 font-normal text-slate-500">${c}</th>`).join('')}</tr>`;
+        for (let r = 0; r < rows; r++) {
+            html += `<tr><td class="bg-slate-100 border border-slate-200 text-center text-slate-500">${r + 1}</td>${cols.map((c, ci) => `<td id="xc-${r}-${ci}" class="border border-slate-200 px-2 py-0.5 text-right font-mono-num">${num()}</td>`).join('')}</tr>`;
+        }
+        stage.innerHTML = `
+            <style>.xl-sel{outline:2px solid #217346;outline-offset:-2px;background:#e8f5ee}</style>
+            <div class="h-9 bg-[#217346] text-white flex items-center px-4 font-semibold">Excel — ${tr('第三季銷售分析.xlsx', '第三季度销售分析.xlsx')}</div>
+            <div class="h-8 border-b flex items-center px-2 gap-2">
+                <span id="xl-ref" class="w-14 border-r text-center font-mono-num">A1</span>
+                <span class="text-slate-400 italic">fx</span>
+                <span id="xl-fx" class="font-mono-num truncate"></span>
+            </div>
+            <div class="flex-1 overflow-hidden"><table class="border-collapse w-full table-fixed">${html}</table></div>`;
+        let sel = null;
+        busyEvery(() => {
+            if (sel) sel.classList.remove('xl-sel');
+            const r = rnd(rows), c = rnd(cols.length);
+            sel = document.getElementById(`xc-${r}-${c}`);
+            if (!sel) return;
+            sel.innerText = num();
+            sel.classList.add('xl-sel');
+            document.getElementById('xl-ref').innerText = cols[c] + (r + 1);
+            document.getElementById('xl-fx').innerText = `=SUM(${cols[c]}1:${cols[c]}${rows})`;
+        }, 600);
+    }
+
+    // 場景四：程式編譯終端機
+    function sceneCode(stage) {
+        stage.className = 'w-full h-full p-4 overflow-hidden font-mono-num text-xs sm:text-sm text-green-400 select-none flex flex-col justify-end';
+        stage.style.background = '#0c0c0c';
+        stage.innerHTML = '<div id="term"></div>';
+        const term = document.getElementById('term');
+        const mods = ['core', 'auth', 'api-gateway', 'scheduler', 'ui-kit', 'payments', 'logger', 'cache', 'search'];
+        const files = ['index', 'utils', 'service', 'controller', 'types', 'config'];
+        const gen = () => {
+            const ts = new Date().toLocaleTimeString('en-GB');
+            const m = mods[rnd(mods.length)], f = files[rnd(files.length)], r = Math.random();
+            if (r < 0.55) return `[${ts}] INFO  Compiling ${m}/src/${f}.ts`;
+            if (r < 0.75) return `[${ts}] OK    ${m} built in ${(Math.random() * 3 + 0.3).toFixed(1)}s`;
+            if (r < 0.88) return `[${ts}] TEST  ${rnd(40) + 100} passed, 0 failed (${m})`;
+            return `[${ts}] WARN  deprecated API used in ${m}/${f}.ts`;
+        };
+        const add = () => {
+            const line = document.createElement('div');
+            const text = gen();
+            line.textContent = text;
+            if (text.includes('WARN')) line.className = 'text-yellow-300';
+            term.appendChild(line);
+            while (term.children.length > 60) term.removeChild(term.firstChild);
+        };
+        for (let i = 0; i < 25; i++) add();
+        busyEvery(() => { if (Math.random() < 0.8) add(); }, 250);
+    }
+
+    function openBusy(scene) {
+        busyClear();
+        const stage = document.getElementById('busy-stage');
+        stage.innerHTML = '';
+        stage.style.background = '';
+        const scenes = { update: sceneUpdate, mail: sceneMail, excel: sceneExcel, code: sceneCode };
+        (scenes[scene] || sceneUpdate)(stage);
+        busyEl.classList.remove('hidden');
+        busyEl.classList.add('flex');
+        try { busyEl.requestFullscreen && busyEl.requestFullscreen().catch(() => {}); } catch (e) {}
+    }
+
+    function closeBusy() {
+        busyClear();
+        busyEl.classList.add('hidden');
+        busyEl.classList.remove('flex');
+        if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeBusy(); });
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement && !busyEl.classList.contains('hidden')) closeBusy();
+    });
 
     // ---------- 初始化 ----------
     updateDate();
